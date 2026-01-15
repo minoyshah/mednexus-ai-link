@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Users, Brain, Video, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   const trustIndicators = [
@@ -53,12 +54,14 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-up delay-400">
-            <Button variant="hero" size="xl" className="w-full sm:w-auto">
-              Start Verification
-              <ArrowRight className="w-5 h-5" />
+            <Button variant="hero" size="xl" className="w-full sm:w-auto" asChild>
+              <Link to="/signup">
+                Start Verification
+                <ArrowRight className="w-5 h-5" />
+              </Link>
             </Button>
-            <Button variant="heroOutline" size="xl" className="w-full sm:w-auto">
-              Explore Features
+            <Button variant="heroOutline" size="xl" className="w-full sm:w-auto" asChild>
+              <Link to="/features">Explore Features</Link>
             </Button>
           </div>
 
