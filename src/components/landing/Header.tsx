@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -10,18 +11,18 @@ const Header = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-accent">
               <ShieldCheck className="w-5 h-5 text-accent-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">MedNet</span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Features
-            </a>
+            </Link>
             <a href="#verification" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Verification
             </a>
@@ -31,15 +32,18 @@ const Header = () => {
             <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Pricing
             </a>
+            <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Contact
+            </Link>
           </nav>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              Sign In
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/login">Sign In</Link>
             </Button>
-            <Button variant="default" size="sm">
-              Get Verified
+            <Button variant="default" size="sm" asChild>
+              <Link to="/signup">Get Verified</Link>
             </Button>
           </div>
 
@@ -56,9 +60,9 @@ const Header = () => {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
             <nav className="flex flex-col gap-4">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Features
-              </a>
+              </Link>
               <a href="#verification" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Verification
               </a>
@@ -68,12 +72,15 @@ const Header = () => {
               <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Pricing
               </a>
+              <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Contact
+              </Link>
               <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
-                <Button variant="ghost" size="sm" className="justify-start">
-                  Sign In
+                <Button variant="ghost" size="sm" className="justify-start" asChild>
+                  <Link to="/login">Sign In</Link>
                 </Button>
-                <Button variant="default" size="sm">
-                  Get Verified
+                <Button variant="default" size="sm" asChild>
+                  <Link to="/signup">Get Verified</Link>
                 </Button>
               </div>
             </nav>

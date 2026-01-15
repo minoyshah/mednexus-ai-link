@@ -58,7 +58,7 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      navigate('/login');
     }
   }, [user, loading, navigate]);
 
@@ -66,7 +66,7 @@ export default function Onboarding() {
     if (profile) {
       setFullName(profile.full_name || '');
       if (profile.onboarding_completed) {
-        navigate('/dashboard');
+        navigate('/app/feed');
       }
     }
   }, [profile, navigate]);
@@ -174,7 +174,7 @@ export default function Onboarding() {
     } else {
       await refreshProfile();
       toast({ title: 'Welcome to MedNet!', description: 'Your profile is now complete.' });
-      navigate('/dashboard');
+      navigate('/app/feed');
     }
   };
 
