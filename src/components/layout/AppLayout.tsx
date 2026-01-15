@@ -34,13 +34,13 @@ interface AppLayoutProps {
 }
 
 const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Home', icon: Home },
-  { path: '/profile', label: 'Profile', icon: User },
-  { path: '/messages', label: 'Messages', icon: MessageSquare },
-  { path: '/network', label: 'Network', icon: Users },
-  { path: '/meetings', label: 'Meetings', icon: Video },
-  { path: '/study', label: 'AI Study', icon: Brain },
-  { path: '/jobs', label: 'Jobs', icon: Briefcase },
+  { path: '/app/feed', label: 'Home', icon: Home },
+  { path: '/app/profile', label: 'Profile', icon: User },
+  { path: '/app/messages', label: 'Messages', icon: MessageSquare },
+  { path: '/app/groups', label: 'Groups', icon: Users },
+  { path: '/app/meetings', label: 'Meetings', icon: Video },
+  { path: '/app/ai', label: 'AI Study', icon: Brain },
+  { path: '/app/jobs', label: 'Jobs', icon: Briefcase },
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -76,7 +76,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
               
-              <Link to="/dashboard" className="flex items-center gap-2">
+              <Link to="/app/feed" className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
                   <Shield className="h-5 w-5 text-accent-foreground" />
                 </div>
@@ -152,10 +152,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <DropdownMenuItem onClick={() => navigate('/app/profile')}>
                     <User className="mr-2 h-4 w-4" /> View Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <DropdownMenuItem onClick={() => navigate('/app/settings')}>
                     <Settings className="mr-2 h-4 w-4" /> Settings
                   </DropdownMenuItem>
                   {!profile?.is_premium && (
