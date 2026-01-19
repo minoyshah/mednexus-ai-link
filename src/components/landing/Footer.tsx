@@ -1,11 +1,32 @@
 import { ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const links = {
-    Product: ["Features", "Verification", "AI Tools", "Pricing", "Security"],
-    Company: ["About", "Careers", "Press", "Blog", "Contact"],
-    Resources: ["Documentation", "API", "Guidelines", "Support", "Status"],
-    Legal: ["Privacy", "Terms", "HIPAA", "Compliance", "Cookies"],
+    Product: [
+      { label: "Features", href: "/features" },
+      { label: "Blog", href: "/blog" },
+      { label: "Documentation", href: "/documentation" },
+      { label: "API", href: "/api" },
+      { label: "Status", href: "/status" },
+    ],
+    Company: [
+      { label: "About", href: "/about" },
+      { label: "Careers", href: "/careers" },
+      { label: "Press", href: "/press" },
+      { label: "Security", href: "/security" },
+    ],
+    Resources: [
+      { label: "Guidelines", href: "/guidelines" },
+      { label: "Support", href: "/support" },
+    ],
+    Legal: [
+      { label: "Terms of Service", href: "/legal?tab=terms" },
+      { label: "Privacy Policy", href: "/legal?tab=privacy" },
+      { label: "HIPAA", href: "/legal?tab=hipaa" },
+      { label: "Compliance", href: "/legal?tab=compliance" },
+      { label: "Cookies", href: "/legal?tab=cookies" },
+    ],
   };
 
   return (
@@ -43,13 +64,13 @@ const Footer = () => {
               <h4 className="font-semibold mb-4">{category}</h4>
               <ul className="space-y-3">
                 {items.map((item) => (
-                  <li key={item}>
-                    <a 
-                      href="#" 
+                  <li key={item.label}>
+                    <Link 
+                      to={item.href}
                       className="text-sm text-primary-foreground/60 hover:text-primary-foreground transition-colors"
                     >
-                      {item}
-                    </a>
+                      {item.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -63,10 +84,10 @@ const Footer = () => {
             © 2026 MedNet. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-2 text-sm text-primary-foreground/60">
+            <Link to="/status" className="flex items-center gap-2 text-sm text-primary-foreground/60 hover:text-primary-foreground transition-colors">
               <span className="w-2 h-2 rounded-full bg-trust animate-pulse-soft" />
               All systems operational
-            </span>
+            </Link>
             <span className="text-sm text-primary-foreground/60">
               HIPAA Compliant
             </span>

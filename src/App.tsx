@@ -12,6 +12,17 @@ import Signup from "./pages/Signup";
 import Features from "./pages/Features";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Legal from "./pages/Legal";
+import About from "./pages/About";
+import Careers from "./pages/Careers";
+import Press from "./pages/Press";
+import Blog from "./pages/Blog";
+import Documentation from "./pages/Documentation";
+import API from "./pages/API";
+import Guidelines from "./pages/Guidelines";
+import Support from "./pages/Support";
+import Status from "./pages/Status";
+import Security from "./pages/Security";
 
 // Auth components
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -44,6 +55,17 @@ const App = () => (
             <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
             <Route path="/features" element={<Features />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/legal" element={<Legal />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/press" element={<Press />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/documentation" element={<Documentation />} />
+            <Route path="/api" element={<API />} />
+            <Route path="/guidelines" element={<Guidelines />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/status" element={<Status />} />
+            <Route path="/security" element={<Security />} />
 
             {/* Legacy auth route redirect */}
             <Route path="/auth" element={<Navigate to="/login" replace />} />
