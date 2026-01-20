@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import MedNetLogo from '@/components/common/MedNetLogo';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,12 +77,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
               
-              <Link to="/app/feed" className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-                  <Shield className="h-5 w-5 text-accent-foreground" />
-                </div>
-                <span className="font-bold text-xl hidden sm:block">MedNet</span>
-              </Link>
+              <MedNetLogo linkTo="/app/feed" size="sm" showTagline={false} />
             </div>
 
             {/* Desktop Navigation */}

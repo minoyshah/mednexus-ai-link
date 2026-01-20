@@ -3,13 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import CreatePost from '@/components/feed/CreatePost';
 import FeedPost from '@/components/feed/FeedPost';
+import PeopleSearch from '@/components/feed/PeopleSearch';
+import SubscriptionCTA from '@/components/feed/SubscriptionCTA';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Shield, TrendingUp, Users, Crown, Bookmark, MessageSquare } from 'lucide-react';
+import { Loader2, Shield, TrendingUp, Users, MessageSquare } from 'lucide-react';
 
 interface Post {
   id: string;
@@ -72,7 +74,6 @@ export default function Feed() {
       return;
     }
 
-    // Fetch author profiles for non-anonymous posts
     const authorIds = data
       .filter((post) => !post.is_anonymous)
       .map((post) => post.author_id);
@@ -92,7 +93,6 @@ export default function Feed() {
       }
     }
 
-    // Get reaction counts
     const postIds = data.map((p) => p.id);
     const { data: reactionsData } = await supabase
       .from('post_reactions')
@@ -104,7 +104,6 @@ export default function Feed() {
       return acc;
     }, {} as Record<string, number>) || {};
 
-    // Get comment counts
     const { data: commentsData } = await supabase
       .from('comments')
       .select('post_id')
@@ -168,26 +167,14 @@ export default function Feed() {
             </CardContent>
           </Card>
 
-          {!profile?.is_premium && (
-            <Card className="bg-gradient-to-br from-premium/10 to-premium/5 border-premium/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Crown className="h-5 w-5 text-premium" />
-                  <span className="font-semibold">Upgrade to Premium</span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Get 30 messages/day, advanced analytics, and more.
-                </p>
-                <Button className="w-full bg-premium text-premium-foreground hover:bg-premium/90">
-                  $9.99/month
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          {!profile?.is_premium && <SubscriptionCTA />}
         </div>
 
         {/* Main Feed */}
         <div className="lg:col-span-6 space-y-4">
+          {/* Search Bar */}
+          <PeopleSearch />
+          
           <CreatePost onPostCreated={fetchPosts} />
 
           {isLoading ? (
