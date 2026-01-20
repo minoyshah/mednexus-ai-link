@@ -11,11 +11,23 @@ const Header = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-accent">
-              <ShieldCheck className="w-5 h-5 text-accent-foreground" />
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="relative flex items-center justify-center w-10 h-10">
+              {/* Glow effect */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent via-trust to-accent opacity-75 blur-md group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Main icon container */}
+              <div className="relative flex items-center justify-center w-full h-full rounded-xl bg-gradient-to-br from-accent to-trust shadow-lg">
+                <ShieldCheck className="w-5 h-5 text-white drop-shadow-md" />
+              </div>
             </div>
-            <span className="text-xl font-bold text-foreground">MedNet</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold bg-gradient-to-r from-foreground via-foreground to-accent bg-clip-text text-transparent">
+                MedNet
+              </span>
+              <span className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase -mt-0.5">
+                Verified Network
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}

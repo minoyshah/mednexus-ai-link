@@ -35,11 +35,19 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-accent">
-                <ShieldCheck className="w-5 h-5 text-accent-foreground" />
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="relative flex items-center justify-center w-10 h-10">
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent via-trust to-accent opacity-50 blur-md" />
+                <div className="relative flex items-center justify-center w-full h-full rounded-xl bg-gradient-to-br from-accent to-trust shadow-lg">
+                  <ShieldCheck className="w-5 h-5 text-white drop-shadow-md" />
+                </div>
               </div>
-              <span className="text-xl font-bold">MedNet</span>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold">MedNet</span>
+                <span className="text-[10px] font-medium tracking-widest text-primary-foreground/60 uppercase -mt-0.5">
+                  Verified Network
+                </span>
+              </div>
             </div>
             <p className="text-sm text-primary-foreground/60 mb-6">
               The verification-first professional network for modern medicine.
