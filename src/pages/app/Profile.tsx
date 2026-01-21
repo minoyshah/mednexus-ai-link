@@ -2,33 +2,30 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AvatarUpload from '@/components/profile/AvatarUpload';
+import EditableSection from '@/components/profile/EditableSection';
+import ConnectionsList from '@/components/profile/ConnectionsList';
+import PublicationsSection from '@/components/profile/PublicationsSection';
 import {
   Shield,
   Edit2,
-  MapPin,
   Building2,
   GraduationCap,
   Briefcase,
   Award,
-  FileText,
   Eye,
-  Users,
   Save,
   X,
-  Plus,
+  Loader2,
 } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
 
 interface Education {
   id: string;
@@ -38,6 +35,7 @@ interface Education {
   start_date: string | null;
   end_date: string | null;
   is_current: boolean | null;
+  description: string | null;
 }
 
 interface Experience {
@@ -57,22 +55,55 @@ interface Certification {
   issuing_organization: string;
   issue_date: string | null;
   expiry_date: string | null;
+  credential_id: string | null;
+  credential_url: string | null;
 }
+
+const educationFields = [
+  { name: 'institution_name', label: 'Institution', type: 'text' as const, required: true },
+  { name: 'degree', label: 'Degree', type: 'text' as const, required: true },
+  { name: 'field_of_study', label: 'Field of Study', type: 'text' as const },
+  { name: 'start_date', label: 'Start Date', type: 'date' as const },
+  { name: 'end_date', label: 'End Date', type: 'date' as const },
+  { name: 'is_current', label: 'Currently studying here', type: 'checkbox' as const },
+  { name: 'description', label: 'Description', type: 'textarea' as const },
+];
+
+const experienceFields = [
+  { name: 'title', label: 'Title', type: 'text' as const, required: true },
+  { name: 'organization', label: 'Organization', type: 'text' as const, required: true },
+  { name: 'location', label: 'Location', type: 'text' as const },
+  { name: 'start_date', label: 'Start Date', type: 'date' as const },
+  { name: 'end_date', label: 'End Date', type: 'date' as const },
+  { name: 'is_current', label: 'Currently working here', type: 'checkbox' as const },
+  { name: 'description', label: 'Description', type: 'textarea' as const },
+];
+
+const certificationFields = [
+  { name: 'name', label: 'Certification Name', type: 'text' as const, required: true },
+  { name: 'issuing_organization', label: 'Issuing Organization', type: 'text' as const, required: true },
+  { name: 'issue_date', label: 'Issue Date', type: 'date' as const },
+  { name: 'expiry_date', label: 'Expiry Date', type: 'date' as const },
+  { name: 'credential_id', label: 'Credential ID', type: 'text' as const },
+  { name: 'credential_url', label: 'Credential URL', type: 'text' as const },
+];
 
 export default function Profile() {
   const { user, profile, verificationStatus, refreshProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Profile data
   const [headline, setHeadline] = useState('');
   const [about, setAbout] = useState('');
   const [institution, setInstitution] = useState('');
-  
+  const [medicalRole, setMedicalRole] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
   // Related data
   const [education, setEducation] = useState<Education[]>([]);
   const [experience, setExperience] = useState<Experience[]>([]);
@@ -83,6 +114,8 @@ export default function Profile() {
       setHeadline(profile.headline || '');
       setAbout(profile.about || '');
       setInstitution(profile.institution || '');
+      setMedicalRole(profile.medical_role || '');
+      setAvatarUrl(profile.avatar_url);
     }
     fetchRelatedData();
   }, [profile]);
@@ -126,11 +159,6 @@ export default function Profile() {
     }
   };
 
-  const getInitials = (name: string | null) => {
-    if (!name) return 'U';
-    return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
   const formatDate = (date: string | null) => {
     if (!date) return '';
     return new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
@@ -153,29 +181,45 @@ export default function Profile() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-6">
-              <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-accent text-accent-foreground text-3xl">
-                  {getInitials(profile?.full_name)}
-                </AvatarFallback>
-              </Avatar>
+              <AvatarUpload
+                userId={user?.id || ''}
+                currentUrl={avatarUrl}
+                fullName={profile?.full_name}
+                onUpload={(url) => {
+                  setAvatarUrl(url);
+                  refreshProfile();
+                }}
+              />
 
               <div className="flex-1">
                 <div className="flex items-start justify-between">
                   <div>
                     <h1 className="text-2xl font-bold">{profile?.full_name}</h1>
                     {isEditing ? (
-                      <Input
-                        value={headline}
-                        onChange={(e) => setHeadline(e.target.value)}
-                        placeholder="Your professional headline"
-                        className="mt-2 max-w-md"
-                      />
+                      <div className="space-y-2 mt-2">
+                        <Input
+                          value={headline}
+                          onChange={(e) => setHeadline(e.target.value)}
+                          placeholder="Your professional headline"
+                          className="max-w-md"
+                        />
+                        <Input
+                          value={institution}
+                          onChange={(e) => setInstitution(e.target.value)}
+                          placeholder="Current institution"
+                          className="max-w-md"
+                        />
+                      </div>
                     ) : (
-                      <p className="text-muted-foreground">{profile?.headline || 'Add a headline'}</p>
+                      <>
+                        <p className="text-muted-foreground">{profile?.headline || 'Add a headline'}</p>
+                        {medicalRole && (
+                          <p className="text-sm text-accent capitalize mt-1">{medicalRole.replace('_', ' ')}</p>
+                        )}
+                      </>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-2">
                     {isEditing ? (
                       <>
@@ -212,11 +256,9 @@ export default function Profile() {
                 </div>
 
                 <div className="flex gap-6 mt-4 text-sm text-muted-foreground">
+                  <ConnectionsList userId={user?.id || ''} />
                   <span className="flex items-center gap-1">
-                    <Users className="h-4 w-4" /> 127 connections
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" /> 342 profile views
+                    <Eye className="h-4 w-4" /> Profile views
                   </span>
                 </div>
               </div>
@@ -231,12 +273,18 @@ export default function Profile() {
             <TabsTrigger value="experience">Experience</TabsTrigger>
             <TabsTrigger value="education">Education</TabsTrigger>
             <TabsTrigger value="certifications">Certifications</TabsTrigger>
+            <TabsTrigger value="publications">Publications</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="about" className="mt-4">
+          <TabsContent value="about" className="mt-4 space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">About</CardTitle>
+                {!isEditing && (
+                  <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 {isEditing ? (
@@ -256,7 +304,7 @@ export default function Profile() {
 
             {/* Interests */}
             {(profile?.clinical_interests?.length || profile?.research_interests?.length) && (
-              <Card className="mt-4">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Interests</CardTitle>
                 </CardHeader>
@@ -287,115 +335,96 @@ export default function Profile() {
           </TabsContent>
 
           <TabsContent value="experience" className="mt-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" /> Experience
-                </CardTitle>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-1" /> Add
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {experience.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No experience added yet.</p>
-                ) : (
-                  <div className="space-y-6">
-                    {experience.map((exp) => (
-                      <div key={exp.id} className="flex gap-4">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                          <Briefcase className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{exp.title}</h4>
-                          <p className="text-sm text-muted-foreground">{exp.organization}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(exp.start_date)} - {exp.is_current ? 'Present' : formatDate(exp.end_date)}
-                            {exp.location && ` • ${exp.location}`}
-                          </p>
-                          {exp.description && (
-                            <p className="text-sm mt-2">{exp.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+            <EditableSection<Experience>
+              title="Experience"
+              icon={<Briefcase className="h-5 w-5" />}
+              items={experience}
+              userId={user?.id || ''}
+              tableName="experience"
+              fields={experienceFields}
+              onRefresh={fetchRelatedData}
+              emptyMessage="No experience added yet."
+              renderItem={(exp) => (
+                <div className="flex gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Briefcase className="h-5 w-5 text-muted-foreground" />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <div>
+                    <h4 className="font-medium">{exp.title}</h4>
+                    <p className="text-sm text-muted-foreground">{exp.organization}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(exp.start_date)} - {exp.is_current ? 'Present' : formatDate(exp.end_date)}
+                      {exp.location && ` • ${exp.location}`}
+                    </p>
+                    {exp.description && <p className="text-sm mt-2">{exp.description}</p>}
+                  </div>
+                </div>
+              )}
+            />
           </TabsContent>
 
           <TabsContent value="education" className="mt-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" /> Education
-                </CardTitle>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-1" /> Add
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {education.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No education added yet.</p>
-                ) : (
-                  <div className="space-y-6">
-                    {education.map((edu) => (
-                      <div key={edu.id} className="flex gap-4">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                          <GraduationCap className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{edu.institution_name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {edu.degree}{edu.field_of_study && `, ${edu.field_of_study}`}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(edu.start_date)} - {edu.is_current ? 'Present' : formatDate(edu.end_date)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+            <EditableSection<Education>
+              title="Education"
+              icon={<GraduationCap className="h-5 w-5" />}
+              items={education}
+              userId={user?.id || ''}
+              tableName="education"
+              fields={educationFields}
+              onRefresh={fetchRelatedData}
+              emptyMessage="No education added yet."
+              renderItem={(edu) => (
+                <div className="flex gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <GraduationCap className="h-5 w-5 text-muted-foreground" />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <div>
+                    <h4 className="font-medium">{edu.institution_name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {edu.degree}{edu.field_of_study && `, ${edu.field_of_study}`}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(edu.start_date)} - {edu.is_current ? 'Present' : formatDate(edu.end_date)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            />
           </TabsContent>
 
           <TabsContent value="certifications" className="mt-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Award className="h-5 w-5" /> Certifications
-                </CardTitle>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-1" /> Add
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {certifications.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No certifications added yet.</p>
-                ) : (
-                  <div className="space-y-6">
-                    {certifications.map((cert) => (
-                      <div key={cert.id} className="flex gap-4">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                          <Award className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{cert.name}</h4>
-                          <p className="text-sm text-muted-foreground">{cert.issuing_organization}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Issued {formatDate(cert.issue_date)}
-                            {cert.expiry_date && ` • Expires ${formatDate(cert.expiry_date)}`}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+            <EditableSection<Certification>
+              title="Certifications"
+              icon={<Award className="h-5 w-5" />}
+              items={certifications}
+              userId={user?.id || ''}
+              tableName="certifications"
+              fields={certificationFields}
+              onRefresh={fetchRelatedData}
+              emptyMessage="No certifications added yet."
+              renderItem={(cert) => (
+                <div className="flex gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Award className="h-5 w-5 text-muted-foreground" />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <div>
+                    <h4 className="font-medium">{cert.name}</h4>
+                    <p className="text-sm text-muted-foreground">{cert.issuing_organization}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Issued {formatDate(cert.issue_date)}
+                      {cert.expiry_date && ` • Expires ${formatDate(cert.expiry_date)}`}
+                    </p>
+                    {cert.credential_id && (
+                      <p className="text-xs text-muted-foreground mt-1">ID: {cert.credential_id}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            />
+          </TabsContent>
+
+          <TabsContent value="publications" className="mt-4">
+            <PublicationsSection userId={user?.id || ''} />
           </TabsContent>
         </Tabs>
       </div>
