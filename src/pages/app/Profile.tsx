@@ -14,6 +14,7 @@ import AvatarUpload from '@/components/profile/AvatarUpload';
 import EditableSection from '@/components/profile/EditableSection';
 import ConnectionsList from '@/components/profile/ConnectionsList';
 import PublicationsSection from '@/components/profile/PublicationsSection';
+import InterestsEditor from '@/components/profile/InterestsEditor';
 import {
   Shield,
   Edit2,
@@ -303,35 +304,12 @@ export default function Profile() {
             </Card>
 
             {/* Interests */}
-            {(profile?.clinical_interests?.length || profile?.research_interests?.length) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Interests</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {profile?.clinical_interests?.length && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Clinical Interests</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {profile.clinical_interests.map((interest) => (
-                          <Badge key={interest} variant="secondary">{interest}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {profile?.research_interests?.length && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Research Interests</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {profile.research_interests.map((interest) => (
-                          <Badge key={interest} variant="outline">{interest}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            <InterestsEditor
+              userId={user?.id || ''}
+              clinicalInterests={profile?.clinical_interests || []}
+              researchInterests={profile?.research_interests || []}
+              onUpdate={refreshProfile}
+            />
           </TabsContent>
 
           <TabsContent value="experience" className="mt-4">
