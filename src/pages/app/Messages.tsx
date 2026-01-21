@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,10 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import NewConversationDialog from '@/components/messages/NewConversationDialog';
 import {
   MessageSquare,
   Send,
@@ -51,7 +51,8 @@ interface Message {
 export default function MessagesPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -67,14 +68,37 @@ export default function MessagesPage() {
       fetchConversations();
       fetchDailyCount();
       setDailyLimit(profile?.is_premium ? 30 : 5);
+
+      // Subscribe to new messages
+      const channel = supabase
+        .channel('messages_realtime')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `recipient_id=eq.${user.id}`,
+        }, () => {
+          fetchConversations();
+          if (selectedConversation) {
+            fetchMessages(selectedConversation.otherUser.id);
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, profile]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const fetchConversations = async () => {
     if (!user) return;
     setIsLoading(true);
 
-    // Fetch messages where user is sender or recipient
     const { data: messagesData, error } = await supabase
       .from('messages')
       .select('*')
@@ -87,9 +111,8 @@ export default function MessagesPage() {
       return;
     }
 
-    // Group by conversation partner
     const convMap = new Map<string, { messages: any[]; otherUserId: string }>();
-    
+
     messagesData?.forEach((msg) => {
       const otherUserId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
       if (!convMap.has(otherUserId)) {
@@ -98,7 +121,6 @@ export default function MessagesPage() {
       convMap.get(otherUserId)!.messages.push(msg);
     });
 
-    // Fetch other user profiles
     const otherUserIds = Array.from(convMap.keys());
     if (otherUserIds.length > 0) {
       const { data: profiles } = await supabase
@@ -142,7 +164,7 @@ export default function MessagesPage() {
   const fetchDailyCount = async () => {
     if (!user) return;
     const today = new Date().toISOString().split('T')[0];
-    
+
     const { data } = await supabase
       .from('daily_message_counts')
       .select('count')
@@ -164,17 +186,17 @@ export default function MessagesPage() {
 
     if (data) {
       setMessages(data);
-      
-      // Mark messages as read
+
       const unreadIds = data
         .filter((m) => m.recipient_id === user.id && !m.read_at)
         .map((m) => m.id);
-      
+
       if (unreadIds.length > 0) {
         await supabase
           .from('messages')
           .update({ read_at: new Date().toISOString() })
           .in('id', unreadIds);
+        fetchConversations();
       }
     }
   };
@@ -190,7 +212,7 @@ export default function MessagesPage() {
     if (dailyCount >= dailyLimit) {
       toast({
         title: 'Daily limit reached',
-        description: profile?.is_premium 
+        description: profile?.is_premium
           ? 'You have reached your daily limit of 30 messages.'
           : 'Upgrade to Premium for 30 messages per day.',
         variant: 'destructive',
@@ -214,7 +236,22 @@ export default function MessagesPage() {
       setNewMessage('');
       setDailyCount((prev) => prev + 1);
       fetchMessages(selectedConversation.otherUser.id);
+      fetchConversations();
     }
+  };
+
+  const handleNewMessageSent = (recipientId: string) => {
+    fetchConversations();
+    fetchDailyCount();
+    // Find and select the new conversation
+    setTimeout(() => {
+      const newConv = conversations.find((c) => c.otherUser.id === recipientId);
+      if (newConv) {
+        handleSelectConversation(newConv);
+      } else {
+        fetchConversations();
+      }
+    }, 500);
   };
 
   const getInitials = (name: string | null) => {
@@ -238,9 +275,17 @@ export default function MessagesPage() {
                   {remainingMessages} messages remaining today
                 </CardDescription>
               </div>
-              <Badge variant={remainingMessages > 0 ? 'outline' : 'destructive'}>
-                {dailyCount}/{dailyLimit}
-              </Badge>
+              <div className="flex items-center gap-3">
+                <NewConversationDialog
+                  userId={user?.id || ''}
+                  dailyCount={dailyCount}
+                  dailyLimit={dailyLimit}
+                  onMessageSent={handleNewMessageSent}
+                />
+                <Badge variant={remainingMessages > 0 ? 'outline' : 'destructive'}>
+                  {dailyCount}/{dailyLimit}
+                </Badge>
+              </div>
             </div>
           </CardHeader>
 
@@ -268,11 +313,12 @@ export default function MessagesPage() {
                   <div className="p-6 text-center text-muted-foreground">
                     <Inbox className="h-8 w-8 mx-auto mb-2" />
                     <p>No conversations yet</p>
+                    <p className="text-sm mt-2">Start a new conversation to connect with colleagues</p>
                   </div>
                 ) : (
                   <div className="divide-y">
                     {conversations
-                      .filter((c) => 
+                      .filter((c) =>
                         c.otherUser.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         c.lastMessage.content.toLowerCase().includes(searchQuery.toLowerCase())
                       )
@@ -280,9 +326,8 @@ export default function MessagesPage() {
                         <button
                           key={conv.id}
                           onClick={() => handleSelectConversation(conv)}
-                          className={`w-full p-3 text-left hover:bg-muted transition-colors ${
-                            selectedConversation?.id === conv.id ? 'bg-muted' : ''
-                          }`}
+                          className={`w-full p-3 text-left hover:bg-muted transition-colors ${selectedConversation?.id === conv.id ? 'bg-muted' : ''
+                            }`}
                         >
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
@@ -337,11 +382,10 @@ export default function MessagesPage() {
                             className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                           >
                             <div
-                              className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                                isMine
+                              className={`max-w-[70%] rounded-2xl px-4 py-2 ${isMine
                                   ? 'bg-accent text-accent-foreground rounded-br-md'
                                   : 'bg-muted rounded-bl-md'
-                              }`}
+                                }`}
                             >
                               <p>{msg.content}</p>
                               <div className={`text-xs mt-1 flex items-center gap-1 ${isMine ? 'text-accent-foreground/70' : 'text-muted-foreground'}`}>
@@ -352,6 +396,7 @@ export default function MessagesPage() {
                           </div>
                         );
                       })}
+                      <div ref={messagesEndRef} />
                     </div>
                   </ScrollArea>
 
@@ -394,7 +439,7 @@ export default function MessagesPage() {
                 <div className="flex-1 flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
                     <MessageSquare className="h-12 w-12 mx-auto mb-4" />
-                    <p>Select a conversation to start messaging</p>
+                    <p>Select a conversation or start a new one</p>
                   </div>
                 </div>
               )}
