@@ -1,848 +1,299 @@
+// Aquilla database types. Hand-maintained to mirror supabase/migrations.
+// Regenerate with `supabase gen types typescript` once the CLI is wired up.
+
 export type Json =
   | string
   | number
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
-export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.1"
-  }
+export type AquillaTrade =
+  | "roadside" | "plumb" | "elec" | "hvac" | "lock" | "roof" | "pest"
+  | "appliance" | "garage" | "handy" | "paint" | "land" | "move" | "clean" | "other";
+
+export type JobStatus =
+  | "requested" | "accepted" | "en_route" | "arrived" | "awaiting_part"
+  | "completed" | "visit_fee" | "disputed" | "cancelled";
+
+export type VerificationStatus = "pending" | "verified" | "rejected";
+export type ProStatus = "onboarding" | "active" | "under_review" | "paused";
+export type PaymentKind = "authorization" | "deposit" | "balance" | "visit_fee" | "refund";
+export type PaymentStatus = "requires_capture" | "captured" | "refunded" | "canceled" | "failed";
+export type PayoutStatus = "pending" | "in_transit" | "paid" | "failed" | "reversed";
+export type DisputeStatus = "open" | "resolved_release" | "resolved_refund" | "resolved_split";
+export type ClaimStatus = "claimed" | "selected" | "rejected";
+
+export interface Database {
   public: {
     Tables: {
-      bookmarks: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bookmarks_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      certifications: {
-        Row: {
-          created_at: string
-          credential_id: string | null
-          credential_url: string | null
-          expiry_date: string | null
-          id: string
-          issue_date: string | null
-          issuing_organization: string
-          name: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          credential_id?: string | null
-          credential_url?: string | null
-          expiry_date?: string | null
-          id?: string
-          issue_date?: string | null
-          issuing_organization: string
-          name: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          credential_id?: string | null
-          credential_url?: string | null
-          expiry_date?: string | null
-          id?: string
-          issue_date?: string | null
-          issuing_organization?: string
-          name?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      comments: {
-        Row: {
-          author_id: string
-          content: string
-          created_at: string
-          id: string
-          is_pinned: boolean | null
-          parent_id: string | null
-          post_id: string
-          updated_at: string
-        }
-        Insert: {
-          author_id: string
-          content: string
-          created_at?: string
-          id?: string
-          is_pinned?: boolean | null
-          parent_id?: string | null
-          post_id: string
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          is_pinned?: boolean | null
-          parent_id?: string | null
-          post_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comments_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "comments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      connections: {
-        Row: {
-          connection_note: string | null
-          created_at: string
-          id: string
-          recipient_id: string
-          requester_id: string
-          status: Database["public"]["Enums"]["connection_status"] | null
-          updated_at: string
-        }
-        Insert: {
-          connection_note?: string | null
-          created_at?: string
-          id?: string
-          recipient_id: string
-          requester_id: string
-          status?: Database["public"]["Enums"]["connection_status"] | null
-          updated_at?: string
-        }
-        Update: {
-          connection_note?: string | null
-          created_at?: string
-          id?: string
-          recipient_id?: string
-          requester_id?: string
-          status?: Database["public"]["Enums"]["connection_status"] | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      credentials: {
-        Row: {
-          created_at: string
-          credential_number: string | null
-          credential_type: string
-          document_url: string | null
-          expiry_date: string | null
-          id: string
-          issue_date: string | null
-          issuing_authority: string | null
-          rejection_reason: string | null
-          updated_at: string
-          user_id: string
-          verification_status:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
-          verified_at: string | null
-          verified_by: string | null
-        }
-        Insert: {
-          created_at?: string
-          credential_number?: string | null
-          credential_type: string
-          document_url?: string | null
-          expiry_date?: string | null
-          id?: string
-          issue_date?: string | null
-          issuing_authority?: string | null
-          rejection_reason?: string | null
-          updated_at?: string
-          user_id: string
-          verification_status?:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
-          verified_at?: string | null
-          verified_by?: string | null
-        }
-        Update: {
-          created_at?: string
-          credential_number?: string | null
-          credential_type?: string
-          document_url?: string | null
-          expiry_date?: string | null
-          id?: string
-          issue_date?: string | null
-          issuing_authority?: string | null
-          rejection_reason?: string | null
-          updated_at?: string
-          user_id?: string
-          verification_status?:
-            | Database["public"]["Enums"]["verification_status"]
-            | null
-          verified_at?: string | null
-          verified_by?: string | null
-        }
-        Relationships: []
-      }
-      daily_message_counts: {
-        Row: {
-          count: number | null
-          id: string
-          message_date: string
-          user_id: string
-        }
-        Insert: {
-          count?: number | null
-          id?: string
-          message_date?: string
-          user_id: string
-        }
-        Update: {
-          count?: number | null
-          id?: string
-          message_date?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      education: {
-        Row: {
-          created_at: string
-          degree: string
-          description: string | null
-          end_date: string | null
-          field_of_study: string | null
-          id: string
-          institution_name: string
-          is_current: boolean | null
-          start_date: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          degree: string
-          description?: string | null
-          end_date?: string | null
-          field_of_study?: string | null
-          id?: string
-          institution_name: string
-          is_current?: boolean | null
-          start_date?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          degree?: string
-          description?: string | null
-          end_date?: string | null
-          field_of_study?: string | null
-          id?: string
-          institution_name?: string
-          is_current?: boolean | null
-          start_date?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      experience: {
-        Row: {
-          created_at: string
-          description: string | null
-          end_date: string | null
-          id: string
-          is_current: boolean | null
-          location: string | null
-          organization: string
-          start_date: string | null
-          title: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          is_current?: boolean | null
-          location?: string | null
-          organization: string
-          start_date?: string | null
-          title: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          is_current?: boolean | null
-          location?: string | null
-          organization?: string
-          start_date?: string | null
-          title?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          is_request: boolean | null
-          read_at: string | null
-          recipient_id: string
-          request_accepted: boolean | null
-          sender_id: string
-          status: Database["public"]["Enums"]["message_status"] | null
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          is_request?: boolean | null
-          read_at?: string | null
-          recipient_id: string
-          request_accepted?: boolean | null
-          sender_id: string
-          status?: Database["public"]["Enums"]["message_status"] | null
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          is_request?: boolean | null
-          read_at?: string | null
-          recipient_id?: string
-          request_accepted?: boolean | null
-          sender_id?: string
-          status?: Database["public"]["Enums"]["message_status"] | null
-        }
-        Relationships: []
-      }
-      post_reactions: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          reaction_type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          reaction_type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          reaction_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_reactions_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      posts: {
-        Row: {
-          author_id: string
-          category: Database["public"]["Enums"]["post_category"]
-          content: string
-          created_at: string
-          id: string
-          is_anonymous: boolean | null
-          is_pinned: boolean | null
-          post_type: Database["public"]["Enums"]["post_type"] | null
-          title: string | null
-          updated_at: string
-          view_count: number | null
-        }
-        Insert: {
-          author_id: string
-          category: Database["public"]["Enums"]["post_category"]
-          content: string
-          created_at?: string
-          id?: string
-          is_anonymous?: boolean | null
-          is_pinned?: boolean | null
-          post_type?: Database["public"]["Enums"]["post_type"] | null
-          title?: string | null
-          updated_at?: string
-          view_count?: number | null
-        }
-        Update: {
-          author_id?: string
-          category?: Database["public"]["Enums"]["post_category"]
-          content?: string
-          created_at?: string
-          id?: string
-          is_anonymous?: boolean | null
-          is_pinned?: boolean | null
-          post_type?: Database["public"]["Enums"]["post_type"] | null
-          title?: string | null
-          updated_at?: string
-          view_count?: number | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
-          about: string | null
-          avatar_url: string | null
-          clinical_interests: string[] | null
-          created_at: string
-          email: string | null
-          full_name: string | null
-          geographic_licenses: string[] | null
-          headline: string | null
-          id: string
-          institution: string | null
-          institution_email: string | null
-          institution_verified: boolean | null
-          is_premium: boolean | null
-          languages: string[] | null
-          medical_role: Database["public"]["Enums"]["medical_role"] | null
-          onboarding_completed: boolean | null
-          open_to_opportunities: boolean | null
-          premium_expires_at: string | null
-          primary_specialty: string | null
-          research_interests: string[] | null
-          subspecialty: string | null
-          updated_at: string
-          user_id: string
-        }
+          id: string;
+          full_name: string | null;
+          phone: string | null;
+          email: string | null;
+          avatar_url: string | null;
+          rating: number | null;
+          is_pro: boolean;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          about?: string | null
-          avatar_url?: string | null
-          clinical_interests?: string[] | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          geographic_licenses?: string[] | null
-          headline?: string | null
-          id?: string
-          institution?: string | null
-          institution_email?: string | null
-          institution_verified?: boolean | null
-          is_premium?: boolean | null
-          languages?: string[] | null
-          medical_role?: Database["public"]["Enums"]["medical_role"] | null
-          onboarding_completed?: boolean | null
-          open_to_opportunities?: boolean | null
-          premium_expires_at?: string | null
-          primary_specialty?: string | null
-          research_interests?: string[] | null
-          subspecialty?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          about?: string | null
-          avatar_url?: string | null
-          clinical_interests?: string[] | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          geographic_licenses?: string[] | null
-          headline?: string | null
-          id?: string
-          institution?: string | null
-          institution_email?: string | null
-          institution_verified?: boolean | null
-          is_premium?: boolean | null
-          languages?: string[] | null
-          medical_role?: Database["public"]["Enums"]["medical_role"] | null
-          onboarding_completed?: boolean | null
-          open_to_opportunities?: boolean | null
-          premium_expires_at?: string | null
-          primary_specialty?: string | null
-          research_interests?: string[] | null
-          subspecialty?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      publications: {
+          id: string;
+          full_name?: string | null;
+          phone?: string | null;
+          email?: string | null;
+          avatar_url?: string | null;
+          rating?: number | null;
+          is_pro?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
+        Relationships: [];
+      };
+      pro_profiles: {
         Row: {
-          authors: string[] | null
-          created_at: string
-          doi: string | null
-          id: string
-          journal: string | null
-          publication_date: string | null
-          pubmed_id: string | null
-          title: string
-          url: string | null
-          user_id: string
-        }
+          id: string;
+          trades: AquillaTrade[];
+          area: string | null;
+          lat: number | null;
+          lng: number | null;
+          radius_miles: number;
+          experience: string | null;
+          license_number: string | null;
+          license_state: string | null;
+          insured: boolean;
+          background_check_consent: boolean;
+          is_online: boolean;
+          verification_status: VerificationStatus;
+          status: ProStatus;
+          completed_count: number;
+          incomplete_count: number;
+          completion_rate: number | null;
+          stripe_account_id: string | null;
+          payouts_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          authors?: string[] | null
-          created_at?: string
-          doi?: string | null
-          id?: string
-          journal?: string | null
-          publication_date?: string | null
-          pubmed_id?: string | null
-          title: string
-          url?: string | null
-          user_id: string
-        }
-        Update: {
-          authors?: string[] | null
-          created_at?: string
-          doi?: string | null
-          id?: string
-          journal?: string | null
-          publication_date?: string | null
-          pubmed_id?: string | null
-          title?: string
-          url?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      specialties: {
+          id: string;
+          trades?: AquillaTrade[];
+          area?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          radius_miles?: number;
+          experience?: string | null;
+          license_number?: string | null;
+          license_state?: string | null;
+          insured?: boolean;
+          background_check_consent?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["pro_profiles"]["Insert"]>;
+        Relationships: [];
+      };
+      jobs: {
         Row: {
-          created_at: string
-          id: string
-          name: string
-          parent_id: string | null
-        }
+          id: string;
+          customer_id: string;
+          pro_id: string | null;
+          trade: AquillaTrade;
+          problem: string;
+          is_open: boolean;
+          budget: number | null;
+          labor_amount: number;
+          parts_amount: number;
+          agreed_price: number;
+          visit_fee_amount: number | null;
+          deposit_amount: number | null;
+          fee_amount: number;
+          payout_amount: number;
+          status: JobStatus;
+          address: string | null;
+          lat: number | null;
+          lng: number | null;
+          return_date: string | null;
+          part_note: string | null;
+          customer_confirmed: boolean | null;
+          pro_confirmed: boolean | null;
+          customer_confirmed_at: string | null;
+          pro_confirmed_at: string | null;
+          confirm_deadline: string | null;
+          accepted_at: string | null;
+          completed_at: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          parent_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          parent_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "specialties_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "specialties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      study_sessions: {
+          customer_id: string;
+          trade: AquillaTrade;
+          problem: string;
+          is_open?: boolean;
+          budget?: number | null;
+          address?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["jobs"]["Row"]>;
+        Relationships: [];
+      };
+      job_messages: {
         Row: {
-          correct_answers: number | null
-          created_at: string
-          duration_minutes: number | null
-          id: string
-          questions_attempted: number | null
-          topic: string
-          user_id: string
-        }
-        Insert: {
-          correct_answers?: number | null
-          created_at?: string
-          duration_minutes?: number | null
-          id?: string
-          questions_attempted?: number | null
-          topic: string
-          user_id: string
-        }
-        Update: {
-          correct_answers?: number | null
-          created_at?: string
-          duration_minutes?: number | null
-          id?: string
-          questions_attempted?: number | null
-          topic?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      study_weaknesses: {
+          id: string;
+          job_id: string;
+          sender_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: { job_id: string; sender_id: string; body: string };
+        Update: Partial<Database["public"]["Tables"]["job_messages"]["Insert"]>;
+        Relationships: [];
+      };
+      job_claims: {
         Row: {
-          created_at: string
-          id: string
-          last_missed_at: string | null
-          missed_count: number | null
-          subtopic: string | null
-          topic: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          last_missed_at?: string | null
-          missed_count?: number | null
-          subtopic?: string | null
-          topic: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          last_missed_at?: string | null
-          missed_count?: number | null
-          subtopic?: string | null
-          topic?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
+          id: string;
+          job_id: string;
+          pro_id: string;
+          status: ClaimStatus;
+          created_at: string;
+        };
+        Insert: { job_id: string; pro_id: string; status?: ClaimStatus };
+        Update: Partial<Database["public"]["Tables"]["job_claims"]["Insert"]>;
+        Relationships: [];
+      };
+      reviews: {
         Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
+          id: string;
+          job_id: string;
+          customer_id: string;
+          pro_id: string;
+          rating: number;
+          comment: string | null;
+          tags: string[];
+          created_at: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
+          job_id: string;
+          customer_id: string;
+          pro_id: string;
+          rating: number;
+          comment?: string | null;
+          tags?: string[];
+        };
+        Update: Partial<Database["public"]["Tables"]["reviews"]["Insert"]>;
+        Relationships: [];
+      };
+      payments: {
+        Row: {
+          id: string;
+          job_id: string;
+          kind: PaymentKind;
+          amount: number;
+          stripe_payment_intent_id: string | null;
+          status: PaymentStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          job_id: string;
+          kind: PaymentKind;
+          amount: number;
+          stripe_payment_intent_id?: string | null;
+          status?: PaymentStatus;
+        };
+        Update: Partial<Database["public"]["Tables"]["payments"]["Insert"]>;
+        Relationships: [];
+      };
+      payouts: {
+        Row: {
+          id: string;
+          job_id: string;
+          pro_id: string;
+          amount: number;
+          fee: number;
+          status: PayoutStatus;
+          stripe_transfer_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          job_id: string;
+          pro_id: string;
+          amount: number;
+          fee: number;
+          status?: PayoutStatus;
+          stripe_transfer_id?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["payouts"]["Insert"]>;
+        Relationships: [];
+      };
+      disputes: {
+        Row: {
+          id: string;
+          job_id: string;
+          opened_by: string | null;
+          reason: string | null;
+          status: DisputeStatus;
+          resolution_note: string | null;
+          resolved_by: string | null;
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: {
+          job_id: string;
+          opened_by?: string | null;
+          reason?: string | null;
+          status?: DisputeStatus;
+        };
+        Update: Partial<Database["public"]["Tables"]["disputes"]["Insert"]>;
+        Relationships: [];
+      };
+      webhook_events: {
+        Row: {
+          id: string;
+          stripe_event_id: string;
+          type: string | null;
+          payload: Json | null;
+          processed: boolean;
+          created_at: string;
+        };
+        Insert: {
+          stripe_event_id: string;
+          type?: string | null;
+          payload?: Json | null;
+          processed?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["webhook_events"]["Insert"]>;
+        Relationships: [];
+      };
+    };
+    Views: Record<string, never>;
     Functions: {
-      can_send_message: { Args: { _user_id: string }; Returns: boolean }
-      get_daily_message_limit: { Args: { _user_id: string }; Returns: number }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      increment_message_count: {
-        Args: { _user_id: string }
-        Returns: undefined
-      }
-      is_user_verified: { Args: { _user_id: string }; Returns: boolean }
-    }
+      aquilla_split_job: {
+        Args: { p_parts: number; p_labor: number };
+        Returns: { fee: number; total: number; payout: number }[];
+      };
+      haversine_miles: {
+        Args: { lat1: number; lng1: number; lat2: number; lng2: number };
+        Returns: number;
+      };
+      set_pro_online: { Args: { p_online: boolean }; Returns: boolean };
+      submit_confirmation: { Args: { p_job: string; p_completed: boolean }; Returns: JobStatus };
+      auto_confirm_due: { Args: Record<string, never>; Returns: number };
+      nearby_jobs: { Args: Record<string, never>; Returns: Database["public"]["Tables"]["jobs"]["Row"][] };
+    };
     Enums: {
-      app_role: "admin" | "moderator" | "user"
-      connection_status: "pending" | "accepted" | "rejected" | "blocked"
-      medical_role:
-        | "medical_student"
-        | "resident"
-        | "fellow"
-        | "attending"
-        | "researcher"
-        | "pharma_industry"
-        | "admin_institution"
-      message_status: "sent" | "delivered" | "read"
-      post_category:
-        | "clinical"
-        | "research"
-        | "policy"
-        | "education"
-        | "industry"
-      post_type:
-        | "text"
-        | "article"
-        | "case_discussion"
-        | "poll"
-        | "announcement"
-      verification_status: "pending" | "verified" | "rejected" | "expired"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+      aquilla_trade: AquillaTrade;
+      job_status: JobStatus;
+      verification_status: VerificationStatus;
+      pro_status: ProStatus;
+      payment_kind: PaymentKind;
+      payment_status: PaymentStatus;
+      payout_status: PayoutStatus;
+      dispute_status: DisputeStatus;
+      claim_status: ClaimStatus;
+    };
+    CompositeTypes: Record<string, never>;
+  };
 }
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {
-      app_role: ["admin", "moderator", "user"],
-      connection_status: ["pending", "accepted", "rejected", "blocked"],
-      medical_role: [
-        "medical_student",
-        "resident",
-        "fellow",
-        "attending",
-        "researcher",
-        "pharma_industry",
-        "admin_institution",
-      ],
-      message_status: ["sent", "delivered", "read"],
-      post_category: [
-        "clinical",
-        "research",
-        "policy",
-        "education",
-        "industry",
-      ],
-      post_type: ["text", "article", "case_discussion", "poll", "announcement"],
-      verification_status: ["pending", "verified", "rejected", "expired"],
-    },
-  },
-} as const

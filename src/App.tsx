@@ -2,100 +2,25 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Public pages
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Features from "./pages/Features";
-import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import Legal from "./pages/Legal";
-import About from "./pages/About";
-import Careers from "./pages/Careers";
-import Press from "./pages/Press";
-import Blog from "./pages/Blog";
-import Documentation from "./pages/Documentation";
-import API from "./pages/API";
-import Guidelines from "./pages/Guidelines";
-import Support from "./pages/Support";
-import Status from "./pages/Status";
-import Security from "./pages/Security";
-
-// Auth components
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import PublicRoute from "./components/auth/PublicRoute";
-
-// App pages
-import Onboarding from "./pages/Onboarding";
-import Feed from "./pages/app/Feed";
-import Profile from "./pages/app/Profile";
-import MessagesPage from "./pages/app/Messages";
-import Groups from "./pages/app/Groups";
-import Meetings from "./pages/app/Meetings";
-import AI from "./pages/app/AI";
-import Jobs from "./pages/app/Jobs";
-import Settings from "./pages/app/Settings";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
-            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/legal" element={<Legal />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/careers" element={<Careers />} />
-            <Route path="/press" element={<Press />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/documentation" element={<Documentation />} />
-            <Route path="/api" element={<API />} />
-            <Route path="/guidelines" element={<Guidelines />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/status" element={<Status />} />
-            <Route path="/security" element={<Security />} />
-
-            {/* Legacy auth route redirect */}
-            <Route path="/auth" element={<Navigate to="/login" replace />} />
-
-            {/* Protected App Routes */}
-            <Route path="/app" element={<Navigate to="/app/feed" replace />} />
-            <Route path="/app/onboarding" element={
-              <ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>
-            } />
-            <Route path="/app/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-            <Route path="/app/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/app/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-            <Route path="/app/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
-            <Route path="/app/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
-            <Route path="/app/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
-            <Route path="/app/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
-            <Route path="/app/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-
-            {/* Legacy route redirects */}
-            <Route path="/dashboard" element={<Navigate to="/app/feed" replace />} />
-            <Route path="/messages" element={<Navigate to="/app/messages" replace />} />
-            <Route path="/study" element={<Navigate to="/app/ai" replace />} />
-            <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
-            <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
