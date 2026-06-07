@@ -37,6 +37,7 @@ export interface Database {
           avatar_url: string | null;
           rating: number | null;
           is_pro: boolean;
+          stripe_customer_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -48,6 +49,7 @@ export interface Database {
           avatar_url?: string | null;
           rating?: number | null;
           is_pro?: boolean;
+          stripe_customer_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
         Relationships: [];
