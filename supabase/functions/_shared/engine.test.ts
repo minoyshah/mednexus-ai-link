@@ -10,6 +10,7 @@ import {
   toCents,
   canTransition,
   isTerminal,
+  paymentAmounts,
   VISIT_FEE,
   AUTO_CONFIRM_HOURS,
 } from "./engine";
@@ -150,6 +151,24 @@ describe("auto-confirm (rule 6)", () => {
     const r = applyAutoConfirm(false, null, deadline + 5, deadline);
     expect(r.decision).toBe("dispute");
     expect(r.autoConfirmed).toEqual(["pro"]);
+  });
+});
+
+describe("paymentAmounts (Stripe destination charge)", () => {
+  it("maps a $150 labor job to cents with the 15% platform fee", () => {
+    const { payout, fee, total } = splitLabor(150);
+    expect(paymentAmounts(total, fee)).toEqual({ amountCents: 15000, applicationFeeCents: 2250 });
+    // pro nets the remainder
+    expect(15000 - 2250).toBe(toCents(payout));
+  });
+
+  it("maps a parts+labor job correctly", () => {
+    const { total, fee } = splitJob(60, 130); // fee 22.5, total 190
+    expect(paymentAmounts(total, fee)).toEqual({ amountCents: 19000, applicationFeeCents: 2250 });
+  });
+
+  it("never lets the application fee exceed the charge", () => {
+    expect(paymentAmounts(20, 50).applicationFeeCents).toBe(2000);
   });
 });
 

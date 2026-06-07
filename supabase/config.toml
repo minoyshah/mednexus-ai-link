@@ -44,8 +44,12 @@ client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 
 # =============================================================================
-# Edge Functions — verify_jwt defaults to true; the Stripe webhook is public
-# (it authenticates via Stripe signature instead of a Supabase JWT).
+# Edge Functions — verify_jwt defaults to true. Two functions opt out: the
+# Stripe webhook (authenticated by Stripe signature) and the cron task
+# (authenticated by a shared CRON_SECRET header).
 # =============================================================================
 [functions.stripe-webhook]
+verify_jwt = false
+
+[functions.cron-auto-confirm]
 verify_jwt = false

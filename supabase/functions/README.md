@@ -25,6 +25,11 @@ take/return JSON, and reuse the same CORS + error envelope (`{ "error": "…" }`
 | `open-jobs-claim` | pro | Claim an open job (rule 8). |
 | `open-jobs-select` | customer | Pick a claimant; prices the job at the budget, assigns the pro. |
 | `jobs-nearby` | pro | List matching requests (trade + area + verified/active/online — rule 9). |
+| `stripe-connect-link` | pro | Create/continue Stripe Express payout onboarding; returns a link. |
+| `payments-authorize` | customer | Hold the agreed price (manual-capture destination charge); returns `client_secret`. |
+| `payments-refund` | customer | Void a held authorization or refund a captured one. |
+| `stripe-webhook` | Stripe | Signature-verified, idempotent event sink (public). |
+| `cron-auto-confirm` | scheduler | Auto-confirm due jobs + capture them (CRON_SECRET header). |
 
 ## Typical flows
 
@@ -36,11 +41,36 @@ sides `jobs-confirm`. If it can't be finished: `jobs-visit-fee` or
 **Open ("Other") job:** `jobs-create` (`is_open`, `budget`) → pros
 `open-jobs-claim` → customer `open-jobs-select` → same dispatch + confirm path.
 
+## Payments (Stripe Connect)
+
+Escrow-style **destination charges** with a manual capture: the customer is
+charged, Aquilla keeps `application_fee_amount`, and the remainder is destined
+for the pro's connected account.
+
+- **Authorize on booking** (`payments-authorize`): manual-capture PaymentIntent
+  for the agreed price, `setup_future_usage=off_session` so later charges can
+  reuse the card. Client confirms → funds held.
+- **Capture on completion**: when both sides confirm (`jobs-confirm`) — or the
+  24h `cron-auto-confirm` fires — the hold is captured and a payout row is
+  recorded. Idempotent.
+- **Cancel** (`jobs-cancel`): voids the uncaptured hold.
+- **Visit fee** (`jobs-visit-fee`): voids the labor hold and takes a $20
+  off-session charge (15% fee).
+- **Parts deposit** (`jobs-needs-part`): off-session charge for parts now (5%
+  fee); the labor balance stays on the booking hold, captured on completion.
+- **Refund/dispute**: `payments-refund` refunds + reverses the transfer;
+  `charge.dispute.created` flips the job to `disputed`.
+
+> **Known follow-up (multi-day labor):** the booking hold equals the labor at
+> quote time. If a pro raises the labor total on a return visit beyond the
+> original hold, an incremental authorization (or re-auth) would be needed —
+> not yet implemented. Parts (deposit) and the unchanged-labor case are handled.
+
 ## Notes
 
 - **Money/fees** come only from `_shared/engine.ts` (`splitJob`,
-  `splitVisitFee`). Payment capture/payout is wired in the Stripe step; these
-  functions set the amounts and statuses the payment layer acts on.
+  `splitVisitFee`, `paymentAmounts`). Functions never trust client-supplied
+  amounts.
 - **Verification:** onboarding leaves a pro `pending`; `jobs-accept`,
   `jobs-visit-fee`, `open-jobs-claim`, and `nearby_jobs` all require
   `verification_status = verified` and a non-paused status. Flipping a pro to

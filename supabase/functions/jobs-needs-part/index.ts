@@ -5,7 +5,8 @@ import { handle, json, HttpError } from "../_shared/http.ts";
 import { requireUser, serviceClient } from "../_shared/supabase.ts";
 import { parseBody, reqUuid, reqMoney, optMoney, optString } from "../_shared/validate.ts";
 import { loadJob, assertAssignedPro, quoteFields, updateJob } from "../_shared/jobs.ts";
-import { canTransition } from "../_shared/engine.ts";
+import { canTransition, splitJob } from "../_shared/engine.ts";
+import { getStripe, offSessionCharge } from "../_shared/stripe.ts";
 
 Deno.serve(handle(async (req) => {
   const { user } = await requireUser(req);
@@ -21,6 +22,13 @@ Deno.serve(handle(async (req) => {
   assertAssignedPro(job, user.id);
   if (!canTransition(job.status, "awaiting_part")) {
     throw new HttpError(409, `Cannot schedule a return from ${job.status}`);
+  }
+
+  // Charge the parts deposit now (5% parts fee) so the pro isn't fronting cost;
+  // the labor balance stays on the booking hold and is captured on completion.
+  if (parts > 0) {
+    const partsFee = splitJob(parts, 0).fee;
+    await offSessionCharge(service, getStripe(), job, "deposit", parts, partsFee);
   }
 
   const updated = await updateJob(service, jobId, {

@@ -219,3 +219,26 @@ export const DISPATCH_STATUSES: JobStatusName[] = ["en_route", "arrived"];
 export function isTerminal(status: JobStatusName): boolean {
   return JOB_TRANSITIONS[status]?.length === 0;
 }
+
+// ---------------------------------------------------------------------------
+// Stripe boundary
+// ---------------------------------------------------------------------------
+
+export interface PaymentAmounts {
+  /** Total to charge the customer, in integer cents. */
+  amountCents: number;
+  /** Aquilla's platform fee (application_fee_amount), in integer cents. */
+  applicationFeeCents: number;
+}
+
+/**
+ * Convert a job's dollar figures to the integer-cent amounts Stripe needs for a
+ * destination charge: the customer is charged `amountCents`, Aquilla keeps
+ * `applicationFeeCents`, and the remainder settles to the pro's connected
+ * account. The application fee must never exceed the charge amount.
+ */
+export function paymentAmounts(agreedPrice: number, fee: number): PaymentAmounts {
+  const amountCents = toCents(agreedPrice);
+  const applicationFeeCents = Math.min(toCents(fee), amountCents);
+  return { amountCents, applicationFeeCents };
+}
