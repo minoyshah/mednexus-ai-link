@@ -1,1 +1,51 @@
 project_id = "esdrhofpukpxgjslnmfn"
+
+# =============================================================================
+# Auth — Aquilla signs users in with phone OTP + Apple/Google (no passwords).
+# All secrets are injected from the environment with env(...) — never inline.
+# Production providers are configured in the Supabase dashboard; this file is
+# the source of truth for `supabase start` / `supabase db reset` locally.
+# =============================================================================
+[auth]
+enabled = true
+site_url = "http://localhost:8080"
+additional_redirect_urls = ["http://localhost:8080"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+# Aquilla does not use email/password — phone OTP + OAuth only.
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+
+# ---- Phone OTP -------------------------------------------------------------
+[auth.sms]
+enable_signup = true
+enable_confirmations = true
+template = "Your Aquilla verification code is {{ .Code }}"
+
+[auth.sms.twilio]
+enabled = true
+account_sid = "env(TWILIO_ACCOUNT_SID)"
+message_service_sid = "env(TWILIO_MESSAGE_SERVICE_SID)"
+auth_token = "env(TWILIO_AUTH_TOKEN)"
+
+# ---- Social login ----------------------------------------------------------
+[auth.external.apple]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+
+# =============================================================================
+# Edge Functions — verify_jwt defaults to true; the Stripe webhook is public
+# (it authenticates via Stripe signature instead of a Supabase JWT).
+# =============================================================================
+[functions.stripe-webhook]
+verify_jwt = false
