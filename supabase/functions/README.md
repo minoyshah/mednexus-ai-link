@@ -30,6 +30,8 @@ take/return JSON, and reuse the same CORS + error envelope (`{ "error": "…" }`
 | `payments-refund` | customer | Void a held authorization or refund a captured one. |
 | `stripe-webhook` | Stripe | Signature-verified, idempotent event sink (public). |
 | `cron-auto-confirm` | scheduler | Auto-confirm due jobs + capture them (CRON_SECRET header). |
+| `pro-verify` | admin | Approve (→ verified/active) or reject a pro. The gate every job action depends on. |
+| `disputes-resolve` | admin | Settle a held dispute: `release` (pay pro), `refund` (pay customer), or `split` (`pro_amount`). |
 
 ## Typical flows
 
@@ -78,3 +80,13 @@ for the pro's connected account.
 - **Dual-confirm + auto-confirm** are enforced in the DB
   (`submit_confirmation`, `auto_confirm_due`); `jobs-confirm` is the thin entry
   that calls the RPC with the caller's JWT so the DB knows which side answered.
+- **Guardrail (rule 7)** is enforced by the `apply_job_outcome` trigger: it
+  recomputes `completion_rate` on every terminal outcome and pauses a pro at
+  ≥ 5 jobs with < 50% completion (restoring them when completions recover). The
+  API layer additionally refuses paused pros at `jobs-accept` / `jobs-visit-fee`
+  / `open-jobs-claim` / `nearby_jobs`.
+- **Disputes** are opened automatically when the two sides disagree
+  (`submit_confirmation`) or on a Stripe chargeback, and settled by an admin via
+  `disputes-resolve`. Resolving as a completion runs the guardrail trigger, so a
+  fair outcome counts toward the pro's stats.
+- **Admin** is `profiles.is_admin` (no client write path); set it out of band.

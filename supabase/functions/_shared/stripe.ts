@@ -132,6 +132,35 @@ export async function voidJob(service: SupabaseClient, stripe: Stripe, jobId: st
 }
 
 /**
+ * Return funds to the customer: void the hold if still uncaptured, or refund +
+ * reverse the transfer/fee if already captured. Idempotent per job.
+ */
+export async function refundJob(
+  service: SupabaseClient,
+  stripe: Stripe,
+  jobId: string,
+): Promise<"voided" | "refunded" | "none"> {
+  const payment = await authPayment(service, jobId);
+  if (!payment?.stripe_payment_intent_id) return "none";
+
+  if (payment.status === "requires_capture") {
+    await stripe.paymentIntents.cancel(payment.stripe_payment_intent_id);
+    await service.from("payments").update({ status: "canceled" }).eq("id", payment.id);
+    return "voided";
+  }
+  if (payment.status === "captured") {
+    await stripe.refunds.create(
+      { payment_intent: payment.stripe_payment_intent_id, refund_application_fee: true, reverse_transfer: true },
+      { idempotencyKey: `refund_${jobId}` },
+    );
+    await service.from("payments").update({ status: "refunded" }).eq("id", payment.id);
+    await service.from("payouts").update({ status: "reversed" }).eq("job_id", jobId);
+    return "refunded";
+  }
+  return "none";
+}
+
+/**
  * Immediate off-session charge against the customer's saved card (visit fee or
  * parts deposit), split with the pro's connected account. Used after the
  * customer has booked (so a payment method is on file).
