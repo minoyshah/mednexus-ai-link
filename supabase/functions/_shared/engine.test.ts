@@ -8,6 +8,8 @@ import {
   applyAutoConfirm,
   confirmDeadlineFrom,
   toCents,
+  canTransition,
+  isTerminal,
   VISIT_FEE,
   AUTO_CONFIRM_HOURS,
 } from "./engine";
@@ -148,6 +150,38 @@ describe("auto-confirm (rule 6)", () => {
     const r = applyAutoConfirm(false, null, deadline + 5, deadline);
     expect(r.decision).toBe("dispute");
     expect(r.autoConfirmed).toEqual(["pro"]);
+  });
+});
+
+describe("job status machine", () => {
+  it("allows the normal dispatch progression", () => {
+    expect(canTransition("requested", "accepted")).toBe(true);
+    expect(canTransition("accepted", "en_route")).toBe(true);
+    expect(canTransition("en_route", "arrived")).toBe(true);
+    expect(canTransition("arrived", "completed")).toBe(true);
+    expect(canTransition("arrived", "awaiting_part")).toBe(true);
+    expect(canTransition("awaiting_part", "completed")).toBe(true);
+  });
+
+  it("allows cancellation before arrival and visit fee on site", () => {
+    expect(canTransition("requested", "cancelled")).toBe(true);
+    expect(canTransition("en_route", "cancelled")).toBe(true);
+    expect(canTransition("arrived", "visit_fee")).toBe(true);
+  });
+
+  it("rejects skips and illegal jumps", () => {
+    expect(canTransition("requested", "arrived")).toBe(false);
+    expect(canTransition("requested", "completed")).toBe(false);
+    expect(canTransition("arrived", "cancelled")).toBe(false); // can't cancel once on site
+    expect(canTransition("accepted", "visit_fee")).toBe(false);
+  });
+
+  it("treats completed / visit_fee / disputed / cancelled as terminal", () => {
+    for (const s of ["completed", "visit_fee", "disputed", "cancelled"] as const) {
+      expect(isTerminal(s)).toBe(true);
+      expect(canTransition(s, "accepted")).toBe(false);
+    }
+    expect(isTerminal("requested")).toBe(false);
   });
 });
 

@@ -180,3 +180,42 @@ export function applyAutoConfirm(
 export function confirmDeadlineFrom(proposedAtMs: number): number {
   return proposedAtMs + AUTO_CONFIRM_HOURS * 60 * 60 * 1000;
 }
+
+// ---------------------------------------------------------------------------
+// Job status machine (server-authoritative)
+// ---------------------------------------------------------------------------
+
+export type JobStatusName =
+  | "requested" | "accepted" | "en_route" | "arrived" | "awaiting_part"
+  | "completed" | "visit_fee" | "disputed" | "cancelled";
+
+/**
+ * The only status transitions the server will allow. Completion (`completed`)
+ * and disputes are reached through the dual-confirm flow, not a direct write;
+ * `visit_fee` is a pro action gated by the guardrail. Terminal states have no
+ * outgoing edges.
+ */
+export const JOB_TRANSITIONS: Record<JobStatusName, JobStatusName[]> = {
+  requested: ["accepted", "cancelled"],
+  accepted: ["en_route", "cancelled"],
+  en_route: ["arrived", "cancelled"],
+  arrived: ["awaiting_part", "visit_fee", "completed", "disputed"],
+  awaiting_part: ["completed", "visit_fee", "disputed"],
+  completed: [],
+  visit_fee: [],
+  disputed: [],
+  cancelled: [],
+};
+
+/** True if `to` is a permitted next status from `from`. */
+export function canTransition(from: JobStatusName, to: JobStatusName): boolean {
+  return JOB_TRANSITIONS[from]?.includes(to) ?? false;
+}
+
+/** Statuses a pro advances through while heading to / on the job. */
+export const DISPATCH_STATUSES: JobStatusName[] = ["en_route", "arrived"];
+
+/** A status from which nothing more can happen. */
+export function isTerminal(status: JobStatusName): boolean {
+  return JOB_TRANSITIONS[status]?.length === 0;
+}
