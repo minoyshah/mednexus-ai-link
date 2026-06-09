@@ -21,12 +21,24 @@ read their secrets from the repo-root `.env.local`.
 > Run the migrations first (`supabase link` + `supabase db push`, or
 > `supabase db reset` locally) so there is a schema to verify.
 
+> **Run these from the repo root.** The harness is self-contained in this
+> folder, so the root `package.json` exposes two convenience scripts that handle
+> the `scripts/aquilla-verify` prefix and env-sourcing for you:
+>
+> ```bash
+> npm run verify:schema    # sources .env.local, runs the SQL verifier via psql
+> npm run verify:stripe    # installs harness deps here, runs the Stripe checker
+> ```
+>
+> The longer forms below are equivalent if you prefer to run the pieces directly.
+
 ## 1. SQL schema verifier
 
 ```bash
 # from repo root, with SUPABASE_DB_URL set in .env.local:
 set -a; . ./.env.local; set +a
 psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f scripts/aquilla-verify/verify_schema.sql
+# (equivalently: npm run verify:schema)
 ```
 
 - Prints a `category | object | status | detail` table (failures first), a
@@ -38,9 +50,11 @@ psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f scripts/aquilla-verify/verify_sche
 ## 2. Stripe money-path verifier
 
 ```bash
-cd scripts/aquilla-verify
-npm install
-npm run stripe          # reads STRIPE_SECRET_KEY from ../../.env.local
+# from repo root:
+npm run verify:stripe   # reads STRIPE_SECRET_KEY from .env.local
+
+# equivalently, directly:
+cd scripts/aquilla-verify && npm install && npm run stripe
 ```
 
 What it does, asserting against `supabase/functions/_shared/engine.ts`:
