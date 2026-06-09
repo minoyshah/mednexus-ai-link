@@ -1,0 +1,15 @@
+{
+  "name": "aquilla-verify",
+  "private": true,
+  "type": "module",
+  "description": "Turnkey verifier for the Aquilla marketplace backend: SQL schema checks + Stripe test-mode money-path assertions.",
+  "scripts": {
+    "stripe": "tsx stripe_money_path.ts"
+  },
+  "dependencies": {
+    "stripe": "17.5.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}
