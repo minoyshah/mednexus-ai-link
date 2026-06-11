@@ -10,7 +10,8 @@ import {
   User, HelpCircle, Wallet, Settings, MessageSquare, Gift, Pencil, LogOut, LayoutGrid, Plus, MoreHorizontal,
   AlertTriangle,
 } from "lucide-react";
-import { LiveMap } from "@/components/aquilla";
+import { LiveMap, MapExperience, StatusPill, Money, MOCK_CENTER, offsetByMiles } from "@/components/aquilla";
+import { Button } from "@/components/ui/button";
 
 // Hex mirrors of the Aquilla tokens in index.css (SVG `fill` attributes can't
 // read CSS vars, so the prototype keeps literal values — same palette, one
@@ -873,6 +874,8 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
   const [requests, setRequests] = useState(SEED_REQS);
   const [active, setActive] = useState(null);
   const [view, setView] = useState("main");
+  const [jobsView, setJobsView] = useState("list"); // list | map
+  const [jobsSort, setJobsSort] = useState("near");  // near | pay
   const [me, setMe] = useState({ done: 2, missed: 0 });
   const [earn, setEarn] = useState(0);
   const [toast, setToast] = useState("");
@@ -880,6 +883,21 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
   useEffect(() => () => tm.current.forEach(clearTimeout), []);
   const jobs = me.done + me.missed; const rate = me.done / jobs; const lowRate = jobs >= MIN_JOBS && rate < 0.5;
   const myReqs = requests.filter((r) => setup.trades.includes(r.tradeId));
+  const sortedReqs = [...myReqs].sort((a, b) =>
+    jobsSort === "pay" ? b.price - a.price : parseFloat(a.dist) - parseFloat(b.dist),
+  );
+  // Place coordinate-less mock requests around the map (deterministic per id),
+  // shaped exactly like real job.lat/lng for a later straight swap.
+  const reqPins = myReqs.map((r) => ({
+    id: String(r.id),
+    at: offsetByMiles(MOCK_CENTER, parseFloat(r.dist), (r.id * 47) % 360),
+    status: "requested",
+    title: tradeById(r.tradeId).name,
+    subtitle: `${r.problem} · ${r.customer} · ${r.dist} mi`,
+    price: r.price,
+    kind: "pro",
+  }));
+  const acceptById = (id) => { const r = myReqs.find((x) => String(x.id) === String(id)); if (r) accept(r); };
   const flash = (m) => { setToast(m); tm.current.push(setTimeout(() => setToast(""), 2600)); };
   const payOf = (p) => +(p - split(p).fee).toFixed(2);
   const finish = (label) => { setActive(null); setView("main"); setTab("jobs"); flash(label); };
@@ -950,11 +968,41 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
               ) : lowRate ? (
                 <div className="rounded-2xl p-4 flex gap-2.5" style={{ background: "#FDECEC", border: `1px solid rgba(234,67,53,.3)` }}><AlertTriangle size={18} color={C.red} className="shrink-0" style={{ marginTop: 1 }} /><div><div style={{ fontWeight: 700, color: "#B42318" }}>New jobs paused</div><div style={{ fontSize: 12.5, color: "#B42318", marginTop: 2, lineHeight: 1.4 }}>Your completion rate dropped below 50%. New requests are paused while Aquilla reviews your account. Completing jobs will restore access.</div></div></div>
               ) : (<>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.sub }} className="mb-3">NEARBY REQUESTS</div>
-                {myReqs.length === 0 ? <div className="text-center py-12" style={{ color: C.sub, fontSize: 14 }}>No requests for your trades right now.</div> : myReqs.map((req) => { const Icon = tradeById(req.tradeId).icon; return (
-                  <div key={req.id} className="rounded-2xl p-4 mb-3" style={{ border: `1px solid ${C.line}` }}>
-                    <div className="flex items-center gap-3"><div className="rounded-xl flex items-center justify-center" style={{ background: C.sel, width: 44, height: 44 }}><Icon size={21} /></div><div className="flex-1"><div style={{ fontWeight: 700, fontSize: 15.5 }}>{tradeById(req.tradeId).name}</div><div style={{ color: C.sub, fontSize: 12.5 }}>{req.problem} · {req.customer} · {req.dist} mi</div></div><div className="text-right"><div style={{ fontWeight: 800 }}>${req.price}</div><div style={{ color: C.green, fontSize: 11, fontWeight: 700 }}>+${payOf(req.price).toFixed(0)}</div></div></div>
-                    <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: `1px solid ${C.line}` }}><button onClick={() => decline(req)} className="flex-1 rounded-xl py-2.5 active:scale-95 transition" style={{ background: C.sel, fontWeight: 700, fontSize: 14 }}>Decline</button><button onClick={() => accept(req)} className="flex-1 rounded-xl py-2.5 active:scale-95 transition" style={{ background: C.ink, color: "#fff", fontWeight: 700, fontSize: 14 }}>Accept</button></div>
+                {/* Feed controls: list/map toggle + sort */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="rounded-full p-0.5 flex" style={{ background: C.sel }}>
+                    {[["list", "List"], ["map", "Map"]].map(([v, l]) => (
+                      <button key={v} onClick={() => setJobsView(v)} className="rounded-full px-4 py-1.5 text-[13px] transition" style={{ background: jobsView === v ? "#fff" : "transparent", fontWeight: 700, color: jobsView === v ? C.ink : C.sub, boxShadow: jobsView === v ? "0 1px 4px rgba(14,23,38,.12)" : "none" }}>{l}</button>
+                    ))}
+                  </div>
+                  <button onClick={() => setJobsSort((s) => s === "near" ? "pay" : "near")} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px]" style={{ background: C.sel, fontWeight: 700, color: C.sub }}>
+                    <LayoutGrid size={13} /> {jobsSort === "near" ? "Nearest" : "Top pay"}
+                  </button>
+                </div>
+
+                {jobsView === "map" ? (
+                  <div className="rounded-2xl overflow-hidden" style={{ height: 460, border: `1px solid ${C.line}` }}>
+                    <MapExperience pins={reqPins} title="Jobs near you" selectLabel="Accept" onSelect={(p) => acceptById(p.id)} />
+                  </div>
+                ) : myReqs.length === 0 ? (
+                  <div className="text-center py-12" style={{ color: C.sub, fontSize: 14 }}>No requests for your trades right now.</div>
+                ) : sortedReqs.map((req, i) => { const Icon = tradeById(req.tradeId).icon; return (
+                  <div key={req.id} className="row rounded-2xl p-4 mb-3 bg-card shadow-card" style={{ animationDelay: `${i * 45}ms` }}>
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-md flex items-center justify-center shrink-0" style={{ background: C.sel, width: 46, height: 46 }}><Icon size={21} color={C.ink} /></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2"><span style={{ fontWeight: 800, fontSize: 15.5, letterSpacing: -0.2 }}>{tradeById(req.tradeId).name}</span><StatusPill status="requested" appearance="tint" className="px-2 py-0.5" /></div>
+                        <div className="truncate" style={{ color: C.sub, fontSize: 12.5, marginTop: 2 }}>{req.problem} · {req.customer} · {req.dist} mi away</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <Money amount={req.price} size="lg" />
+                        <div className="flex items-center justify-end gap-1" style={{ marginTop: 2 }}><span style={{ color: C.sub, fontSize: 11, fontWeight: 600 }}>you earn</span><Money amount={payOf(req.price)} size="sm" className="text-status-completed" /></div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
+                      <Button variant="secondary" className="flex-1" onClick={() => decline(req)}>Decline</Button>
+                      <Button className="flex-1" onClick={() => accept(req)}>Accept</Button>
+                    </div>
                   </div>); })}
               </>)}
             </div>

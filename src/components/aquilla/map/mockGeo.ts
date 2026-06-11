@@ -37,6 +37,18 @@ export function pointOnRoute(t: number, route: LngLat[] = MOCK_ROUTE): LngLat {
   return [aLng + (bLng - aLng) * f, aLat + (bLat - aLat) * f];
 }
 
+/**
+ * Offset a center point by a distance (miles) along a compass bearing — used
+ * to place coordinate-less mock requests on the map until real lat/lng exist.
+ */
+export function offsetByMiles(center: LngLat, miles: number, bearingDeg: number): LngLat {
+  const degPerMile = 1 / 69; // ~69 miles per degree of latitude
+  const br = (bearingDeg * Math.PI) / 180;
+  const dLat = miles * degPerMile * Math.cos(br);
+  const dLng = (miles * degPerMile * Math.sin(br)) / Math.cos((center[1] * Math.PI) / 180);
+  return [center[0] + dLng, center[1] + dLat];
+}
+
 /** A spread of nearby pros/open jobs for the clustered browse experience. */
 export const MOCK_NEARBY: MapPin[] = [
   { id: "p1", at: [-122.4151, 37.7762], status: "requested", title: "Marcus R.", subtitle: "Plumbing · ★ 4.9", price: 95, kind: "pro" },

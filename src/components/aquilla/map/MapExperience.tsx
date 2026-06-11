@@ -17,6 +17,8 @@ interface MapExperienceProps {
   you?: LngLat;
   /** Sheet header title; a live count is appended. */
   title?: string;
+  /** Label for the focused card's commit button (e.g. "Accept"). */
+  selectLabel?: string;
   /** Fired when the user commits to a focused pin (e.g. "Choose"). */
   onSelect?: (pin: MapPin) => void;
   className?: string;
@@ -32,6 +34,7 @@ export function MapExperience({
   pins = MOCK_NEARBY,
   you = MOCK_YOU,
   title = "Pros near you",
+  selectLabel = "Choose",
   onSelect,
   className,
 }: MapExperienceProps) {
@@ -120,7 +123,7 @@ export function MapExperience({
                         )}
                       </div>
                       <Button className="mt-3 w-full" onClick={() => onSelect?.(p)}>
-                        Choose {p.title?.split(" ")[0] ?? "this pro"}
+                        {selectLabel} {p.title?.split(" ")[0] ?? ""}
                       </Button>
                     </div>
                   )}

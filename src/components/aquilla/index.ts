@@ -18,5 +18,5 @@ export { MapExperience } from "./map/MapExperience";
 export { StylizedCanvas } from "./map/StylizedCanvas";
 export type { LngLat, MapPin, MapViewport } from "./map/types";
 export {
-  MOCK_CENTER, MOCK_YOU, MOCK_DESTINATION, MOCK_ROUTE, MOCK_NEARBY, pointOnRoute,
+  MOCK_CENTER, MOCK_YOU, MOCK_DESTINATION, MOCK_ROUTE, MOCK_NEARBY, pointOnRoute, offsetByMiles,
 } from "./map/mockGeo";
