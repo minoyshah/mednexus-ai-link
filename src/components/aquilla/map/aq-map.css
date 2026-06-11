@@ -1,0 +1,66 @@
+/* DOM markers for the live map (created imperatively, so styled globally but
+   only loaded inside the lazy map chunk). Colors come from the token vars. */
+
+.aq-marker { line-height: 0; }
+
+/* "you" — cobalt dot with a pulsing halo */
+.aq-you-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: hsl(var(--status-requested));
+  border: 3.5px solid #fff;
+  box-shadow: var(--shadow-pin);
+}
+.aq-you-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: hsl(var(--status-requested));
+  transform: translate(-50%, -50%);
+  opacity: 0.22;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .aq-you-halo { animation: aqYouPulse 2.4s ease-out infinite; }
+}
+@keyframes aqYouPulse {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.28; }
+  100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; }
+}
+
+/* moving pro marker — amber (en route) */
+.aq-pro {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: hsl(var(--status-en-route));
+  border: 3px solid #fff;
+  box-shadow: 0 4px 10px -2px hsl(38 92% 50% / 0.55);
+}
+
+/* destination — amber teardrop until arrived, then emerald check */
+.aq-dest {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px 999px 999px 2px;
+  transform: rotate(45deg);
+  background: hsl(var(--status-en-route));
+  border: 3px solid #fff;
+  box-shadow: var(--shadow-card);
+}
+.aq-dest.aq-arrived {
+  border-radius: 999px;
+  transform: none;
+  background: hsl(var(--status-arrived));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 18px;
+}
