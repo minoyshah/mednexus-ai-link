@@ -11,12 +11,15 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+// Hex mirrors of the Aquilla tokens in index.css (SVG `fill` attributes can't
+// read CSS vars, so the prototype keeps literal values — same palette, one
+// source of truth in the token file).
 const C = {
-  bg: "#E8EAED", sheet: "#FFFFFF", ink: "#000000", sub: "#6B6F76",
-  line: "#ECECEE", sel: "#F4F4F4", green: "#0E9E63", gold: "#FFB400",
-  blue: "#1A73E8", red: "#EA4335",
-  land: "#E9ECEF", water: "#A9D3F0", park: "#C8E2C2", bldg: "#DCDEE2", road: "#FFFFFF", casing: "#CBD0D6",
-  meBubble: "#000000", proBubble: "#F0F1F3",
+  bg: "#F7F8FA", sheet: "#FFFFFF", ink: "#0E1726", sub: "#6B7280",
+  line: "#ECEEF2", sel: "#EEF0F4", green: "#10B981", gold: "#FFB400",
+  blue: "#2E5BFF", red: "#F43F6E",
+  land: "#EAEDF1", water: "#CFE6F7", park: "#DCEBD8", bldg: "#DCDFE4", road: "#FFFFFF", casing: "#DBE0E7",
+  meBubble: "#0E1726", proBubble: "#EEF0F4",
 };
 const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 const FEE_RATE = 0.15; // Aquilla takes 15% of the price the pro sets
@@ -146,9 +149,8 @@ export default function App() {
   const saveRating = (rating, review) => { setTrips((x) => x.map((t) => t.id === cur.id ? { ...t, rating, review } : t)); setTab("activity"); go("main"); };
 
   return (
-    <div className="w-full flex justify-center" style={{ background: "#1A1A1A", fontFamily: F }}>
+    <div className="w-full flex justify-center min-h-dvh items-center" style={{ background: "#0E1726", fontFamily: F }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes scrIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
         @keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:translateY(0);opacity:1}}
         @keyframes bub{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -161,7 +163,8 @@ export default function App() {
         .row{animation:rowIn .4s cubic-bezier(.22,.7,.25,1) both}.bub{animation:bub .3s cubic-bezier(.22,.7,.25,1) both}.fadeUp{animation:fadeUp .5s cubic-bezier(.22,.7,.25,1) both}
         *{-webkit-tap-highlight-color:transparent} button{font-family:inherit}
       `}</style>
-      <div className="w-full relative" style={{ maxWidth: 412, height: 860, background: C.sheet, overflow: "hidden" }}>
+      {/* True fullscreen on phones; framed device showcase on desktop. */}
+      <div className="w-full relative" style={{ maxWidth: 412, height: "min(100dvh, 860px)", background: C.sheet, overflow: "hidden" }}>
         <div key={role + screen + tab} className="scr w-full h-full">{role === "pro" ? (proSetup ? (proEditing ? <ProOnboarding initial={proSetup} editing onDone={(su) => { setProSetup(su); setProEditing(false); }} onCancel={() => setProEditing(false)} /> : <ProApp profile={profile} setup={proSetup} onEditSetup={() => setProEditing(true)} onSaveProfile={setProfile} onExit={() => setRole("customer")} />) : <ProOnboarding onDone={(su) => setProSetup(su)} onCancel={() => setRole("customer")} />) : <>
           {screen === "welcome" && <Welcome onAuth={(m) => { setAuthMode(m); go("auth"); }} onGuest={home} />}
           {screen === "auth" && <Auth mode={authMode} onBack={() => go("welcome")} onDone={home} />}
