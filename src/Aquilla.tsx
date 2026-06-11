@@ -10,7 +10,7 @@ import {
   User, HelpCircle, Wallet, Settings, MessageSquare, Gift, Pencil, LogOut, LayoutGrid, Plus, MoreHorizontal,
   AlertTriangle,
 } from "lucide-react";
-import { LiveMap, MapExperience, StatusPill, Money, MOCK_CENTER, offsetByMiles } from "@/components/aquilla";
+import { LiveMap, MapExperience, EarningsDashboard, StatusPill, Money, MOCK_CENTER, offsetByMiles } from "@/components/aquilla";
 import { Button } from "@/components/ui/button";
 
 // Hex mirrors of the Aquilla tokens in index.css (SVG `fill` attributes can't
@@ -1009,16 +1009,7 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
           </div>
         )}
         {tab === "earnings" && (
-          <div className="px-5 pt-12">
-            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Earnings</div>
-            <div className="rounded-2xl p-5 mt-4" style={{ background: C.ink, color: "#fff" }}><div style={{ fontSize: 13, opacity: .7, fontWeight: 600 }}>This session</div><div style={{ fontSize: 38, fontWeight: 800, marginTop: 2 }}>${earn.toFixed(2)}</div></div>
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="rounded-2xl p-4" style={{ background: C.sel }}><div style={{ fontSize: 24, fontWeight: 800 }}>{me.done}</div><div style={{ color: C.sub, fontSize: 13 }}>Jobs completed</div></div>
-              <div className="rounded-2xl p-4" style={{ background: lowRate ? "#FDECEC" : C.sel }}><div style={{ fontSize: 24, fontWeight: 800, color: lowRate ? C.red : C.ink }}>{Math.round(rate * 100)}%</div><div style={{ color: lowRate ? "#B42318" : C.sub, fontSize: 13 }}>Completion rate</div></div>
-            </div>
-            {lowRate && <div className="rounded-2xl p-4 mt-3 flex gap-2.5" style={{ background: "#FDECEC", border: `1px solid rgba(234,67,53,.3)` }}><AlertTriangle size={18} color={C.red} className="shrink-0" style={{ marginTop: 1 }} /><span style={{ fontSize: 12.5, color: "#B42318", lineHeight: 1.4 }}>Your completion rate is below 50%, so new jobs and the visit fee are paused. Complete jobs to restore your account.</span></div>}
-            <div className="mt-4 px-1" style={{ color: C.sub, fontSize: 12.5, lineHeight: 1.4 }}>Payouts arrive instantly after each completed job, minus Aquilla's 15% service fee (5% on parts).</div>
-          </div>
+          <EarningsDashboard liveEarnings={earn} jobsDone={me.done} completionRate={rate} lowRate={lowRate} />
         )}
         {tab === "account" && (
           <div className="px-5 pt-12">
