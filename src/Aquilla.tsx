@@ -10,6 +10,7 @@ import {
   User, HelpCircle, Wallet, Settings, MessageSquare, Gift, Pencil, LogOut, LayoutGrid, Plus, MoreHorizontal,
   AlertTriangle,
 } from "lucide-react";
+import { LiveMap } from "@/components/aquilla";
 
 // Hex mirrors of the Aquilla tokens in index.css (SVG `fill` attributes can't
 // read CSS vars, so the prototype keeps literal values — same palette, one
@@ -66,29 +67,13 @@ const SEED = [
   { id: 904, tradeId: "elec", proName: "Tanya Okafor", proLicensed: true, problem: "Install fixture", date: "Apr 30", price: 165, status: "Completed", rating: null, review: "" },
 ];
 
-/* ---------- map ---------- */
-const BLDGS = [[20,150,40,28],[66,150,46,28],[160,150,40,30],[250,142,44,30],[314,150,46,28],[20,240,46,34],[160,238,40,32],[314,236,46,34],[96,320,40,30],[244,316,46,32],[314,318,40,30],[20,386,46,30],[96,388,40,28],[244,400,46,30],[160,408,40,28]];
+/* ---------- map ----------
+   StreetMap is now a thin adapter over the real map system (LiveMap): a live,
+   token-styled MapLibre map that lazy-loads and gracefully falls back to the
+   animated stylized canvas where WebGL/tiles are unavailable. The {nav, arrived}
+   contract is unchanged so every call site keeps working untouched. */
 function StreetMap({ nav, arrived }) {
-  const route = "M70 452 L72 364 L210 356 L214 224 L304 218 L306 122";
-  return (
-    <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" className="w-full h-full" style={{ display: "block" }}>
-      <rect width="400" height="500" fill={C.land} />
-      <path d="M300 -20 L440 -20 L440 150 L360 60 Z" fill={C.water} opacity="0.8" />
-      <rect x="14" y="300" width="120" height="120" rx="10" fill={C.park} /><rect x="300" y="380" width="120" height="120" rx="10" fill={C.park} />
-      {BLDGS.map((b, i) => <rect key={i} x={b[0]} y={b[1]} width={b[2]} height={b[3]} rx="3" fill={C.bldg} />)}
-      <g stroke={C.casing} strokeLinecap="round" fill="none"><path d="M-20 130 H420" strokeWidth="17" /><path d="M-20 220 H420" strokeWidth="13" /><path d="M-20 300 H420" strokeWidth="13" /><path d="M-20 360 H420" strokeWidth="17" /><path d="M-20 440 H420" strokeWidth="13" /><path d="M72 -20 V520" strokeWidth="17" /><path d="M150 -20 V520" strokeWidth="11" /><path d="M230 -20 V520" strokeWidth="11" /><path d="M306 -20 V520" strokeWidth="17" /></g>
-      <g stroke={C.road} strokeLinecap="round" fill="none"><path d="M-20 130 H420" strokeWidth="12" /><path d="M-20 220 H420" strokeWidth="8" /><path d="M-20 300 H420" strokeWidth="8" /><path d="M-20 360 H420" strokeWidth="12" /><path d="M-20 440 H420" strokeWidth="8" /><path d="M72 -20 V520" strokeWidth="12" /><path d="M150 -20 V520" strokeWidth="6" /><path d="M230 -20 V520" strokeWidth="6" /><path d="M306 -20 V520" strokeWidth="12" /></g>
-      {nav && (<>
-        <path id="troute" d={route} fill="none" stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={route} fill="none" stroke={C.blue} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="70" cy="452" r="16" fill={C.blue} opacity="0.2"><animate attributeName="r" values="12;26;12" dur="2.4s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.28;0;0.28" dur="2.4s" repeatCount="indefinite" /></circle>
-        <circle cx="70" cy="452" r="8" fill={C.blue} stroke="#fff" strokeWidth="3" />
-        {arrived ? (<g transform="translate(306 122)"><circle r="12" fill={C.green} stroke="#fff" strokeWidth="3" /><path d="M-5 0 L-1 4 L5 -4" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></g>)
-          : (<g><path d="M306 104 c-9 0 -15 7 -15 15 c0 11 15 25 15 25 s15 -14 15 -25 c0 -8 -6 -15 -15 -15 z" fill={C.red} stroke="#fff" strokeWidth="2" /><circle cx="306" cy="119" r="5" fill="#fff" /></g>)}
-        {!arrived && (<g><circle r="11" fill={C.blue} stroke="#fff" strokeWidth="3" /><path d="M0 -5 L4.5 5 L0 2 L-4.5 5 Z" fill="#fff" /><animateMotion dur="5s" repeatCount="indefinite" rotate="auto"><mpath href="#troute" xlinkHref="#troute" /></animateMotion></g>)}
-      </>)}
-    </svg>
-  );
+  return <LiveMap nav={nav} arrived={arrived} />;
 }
 const Stars = ({ n, size = 14 }) => <span className="inline-flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} size={size} color={i <= n ? C.gold : C.line} fill={i <= n ? C.gold : C.line} />)}</span>;
 const STEPS = ["Confirming", "On the way", "Arriving", "Arrived"];
