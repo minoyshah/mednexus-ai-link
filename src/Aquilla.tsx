@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { LiveMap, MapExperience, EarningsDashboard, StatusPill, Money, MOCK_CENTER, offsetByMiles } from "@/components/aquilla";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Hex mirrors of the Aquilla tokens in index.css (SVG `fill` attributes can't
 // read CSS vars, so the prototype keeps literal values — same palette, one
@@ -502,20 +503,20 @@ function TripDetail({ trip, onBack, onRate, onHelp, onCompleteReturn, onMessage,
     <div className="h-full flex flex-col" style={{ background: C.sheet }}>
       <div className="flex items-center gap-3 px-4 pt-12 pb-3"><button onClick={onBack} className="active:scale-90 transition"><ChevronLeft size={24} /></button><span style={{ fontWeight: 800, fontSize: 19 }}>Trip details</span></div>
       <div className="flex-1 overflow-auto px-5">
-        <div className="relative rounded-2xl overflow-hidden mt-2" style={{ height: 130 }}><StreetMap /></div>
-        <div className="flex items-center gap-3 mt-4"><div className="rounded-xl flex items-center justify-center" style={{ background: C.sel, width: 48, height: 48 }}><Icon size={22} /></div><div className="flex-1"><div style={{ fontWeight: 800, fontSize: 18 }}>{td.name}</div><div style={{ color: C.sub, fontSize: 13 }}>{trip.problem} \u00b7 {trip.date}</div></div><span className="rounded-full px-2.5 py-1" style={{ background: disputed ? "#FDECEC" : awaiting ? "#E8F0FE" : "#E7F6EE", color: disputed ? C.red : awaiting ? C.blue : C.green, fontSize: 11, fontWeight: 700 }}>{trip.status}</span></div>
-        {disputed && <div className="rounded-2xl p-3 mt-3 flex gap-2.5" style={{ background: "#FDECEC" }}><AlertTriangle size={18} color={C.red} style={{ marginTop: 1, flexShrink: 0 }} /><div><div style={{ fontWeight: 700, fontSize: 14, color: "#B42318" }}>Disputed \u2014 under review</div><div style={{ color: "#B42318", fontSize: 12.5, marginTop: 1, lineHeight: 1.4 }}>The client and pro disagreed on completion. Payment is held until Aquilla reviews it.</div></div></div>}
-        {awaiting && <div className="rounded-2xl p-3 mt-3 flex gap-2.5" style={{ background: "#E8F0FE" }}><Clock size={18} color={C.blue} style={{ marginTop: 1, flexShrink: 0 }} /><div><div style={{ fontWeight: 700, fontSize: 14, color: "#174EA6" }}>Returns {trip.returnDate}</div>{trip.partNote ? <div style={{ color: "#3B6FBF", fontSize: 12.5, marginTop: 1 }}>{trip.partNote}</div> : null}</div></div>}
+        <div className="relative rounded-lg overflow-hidden mt-2" style={{ height: 130 }}><StreetMap /></div>
+        <div className="flex items-center gap-3 mt-4"><div className="rounded-md flex items-center justify-center shrink-0" style={{ background: C.sel, width: 48, height: 48 }}><Icon size={22} color={C.ink} /></div><div className="flex-1 min-w-0"><div className="truncate" style={{ fontWeight: 800, fontSize: 18 }}>{td.name}</div><div className="truncate" style={{ color: C.sub, fontSize: 13 }}>{trip.problem} \u00b7 {trip.date}</div></div><StatusPill status={trip.status} appearance="tint" /></div>
+        {disputed && <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3.5"><div className="flex gap-2.5"><Lock size={18} className="mt-0.5 shrink-0 text-destructive" /><div><div className="text-[14px] font-bold text-destructive">Disputed \u2014 funds held</div><div className="mt-0.5 text-[12.5px] leading-snug text-destructive/90">The customer and pro disagreed on completion. Aquilla is reviewing; no money moves until it's resolved.</div></div></div><div className="mt-3 flex items-center justify-between border-t border-destructive/20 pt-3"><span className="text-[12.5px] font-semibold text-destructive/90">Held in escrow</span><Money amount={trip.price} size="md" className="text-destructive" /></div></div>}
+        {awaiting && <div className="mt-3 flex gap-2.5 rounded-lg bg-status-awaiting-part/10 p-3.5"><Clock size={18} className="mt-0.5 shrink-0 text-status-awaiting-part" /><div><div className="text-[14px] font-bold text-status-awaiting-part">Returns {trip.returnDate}</div>{trip.partNote ? <div className="mt-0.5 text-[12.5px] text-status-awaiting-part/90">{trip.partNote}</div> : null}</div></div>}
         <div className="flex items-center gap-3 rounded-2xl p-3 mt-4" style={{ background: C.sel }}><div className="rounded-full flex items-center justify-center font-bold" style={{ width: 44, height: 44, background: "#fff" }}>{trip.proName[0]}</div><div className="flex-1"><div className="flex items-center gap-1.5" style={{ fontWeight: 700 }}>{trip.proName}{trip.proLicensed && <Shield size={13} color={C.green} />}</div><div style={{ color: C.sub, fontSize: 12.5 }}>Your pro</div></div><button onClick={onMessage} className="rounded-full flex items-center justify-center active:scale-90 transition" style={{ width: 42, height: 42, background: "#fff" }}><Send size={16} /></button></div>
         <div className="mt-5" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>{awaiting ? "ESTIMATE" : "RECEIPT"}</div>
         <div className="mt-2" style={{ borderTop: `1px solid ${C.line}` }}>
           {sj ? (<>
-            <div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Parts{awaiting ? " (deposit paid)" : ""}</span><span style={{ fontWeight: 600 }}>${trip.parts.toFixed(2)}</span></div>
-            <div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Labor{awaiting ? " (on completion)" : ""}</span><span style={{ fontWeight: 600 }}>${trip.labor.toFixed(2)}</span></div>
-            <div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Aquilla fee (15% labor / 5% parts)</span><span style={{ fontWeight: 600 }}>${fee.toFixed(2)}</span></div>
-            <div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Pro payout</span><span style={{ fontWeight: 600 }}>${payout.toFixed(2)}</span></div>
-          </>) : ([["Pro payout", `$${payout.toFixed(2)}`], ["Aquilla service fee (15%)", `$${fee.toFixed(2)}`]].map(([k, v]) => <div key={k} className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>{k}</span><span style={{ fontWeight: 600 }}>{v}</span></div>))}
-          <div className="flex justify-between py-3"><span style={{ fontWeight: 800 }}>{awaiting ? "Total on completion" : "Total paid"}</span><span style={{ fontWeight: 800 }}>${trip.price.toFixed(2)}</span></div>
+            <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">Parts{awaiting ? " (deposit paid)" : ""}</span><Money amount={trip.parts} size="sm" /></div>
+            <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">Labor{awaiting ? " (on completion)" : ""}</span><Money amount={trip.labor} size="sm" /></div>
+            <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">Aquilla fee (15% labor / 5% parts)</span><Money amount={fee} size="sm" /></div>
+            <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">Pro payout</span><Money amount={payout} size="sm" /></div>
+          </>) : ([["Pro payout", payout], ["Aquilla service fee (15%)", fee]].map(([k, v]) => <div key={k} className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">{k}</span><Money amount={v} size="sm" /></div>))}
+          <div className="flex items-center justify-between py-3"><span className="text-[15px] font-extrabold">{awaiting ? "Total on completion" : "Total paid"}</span><Money amount={trip.price} size="lg" /></div>
         </div>
         {!awaiting && !disputed && (trip.rating ? <div className="rounded-2xl p-4 mt-3" style={{ border: `1px solid ${C.line}` }}><div className="flex items-center justify-between"><span style={{ fontWeight: 700 }}>Your rating</span><Stars n={trip.rating} size={16} /></div>{trip.review && <div className="mt-2" style={{ color: C.sub, fontSize: 14 }}>\u201c{trip.review}\u201d</div>}</div>
           : <button onClick={onRate} className="w-full rounded-2xl mt-3 active:scale-[.98] transition" style={{ background: "#FFF1DD", color: "#B7791F", height: 50, fontWeight: 700 }}>Rate your pro</button>)}
@@ -908,7 +909,7 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
   const couldntFix = () => { if (lowRate) return; setEarn((e) => e + 18); setMe((s) => ({ ...s, missed: s.missed + 1 })); finish("Visit fee charged — you earned $18.00"); };
 
   if (view === "thread" && active) return <Thread name={active.customer} status={"Pending · job in progress"} onBack={() => setView("active")} />;
-  if (view === "confirm" && active) return <Confirm proName={profile.name} customerName={active.customer} onBack={() => setView("active")} onResolve={(ok) => { if (ok) complete(); else finish("Disputed \u2014 sent to Aquilla for review"); }} />;
+  if (view === "confirm" && active) return <Confirm proName={profile.name} customerName={active.customer} amount={active.price} onBack={() => setView("active")} onResolve={(ok) => { if (ok) complete(); else finish("Disputed \u2014 sent to Aquilla for review"); }} />;
   if (view === "profile") return <EditProfile profile={profile} onBack={() => setView("main")} onSave={(p) => { onSaveProfile && onSaveProfile(p); setView("main"); }} />;
 
   if (view === "active" && active) {
@@ -1131,7 +1132,7 @@ function ProOnboarding({ initial, editing, onDone, onCancel }) {
 }
 
 /* ---------- CONFIRM COMPLETION (both sides must agree) ---------- */
-function Confirm({ proName, customerName, onBack, onResolve }) {
+function Confirm({ proName, customerName, amount, onBack, onResolve }) {
   const [client, setClient] = useState(null);
   const [proAns, setProAns] = useState(null);
   const [secs, setSecs] = useState(12);
@@ -1141,31 +1142,98 @@ function Confirm({ proName, customerName, onBack, onResolve }) {
   useEffect(() => { if (secs !== 0) return; if (client === null) { setAutoC(true); setClient(true); } if (proAns === null) { setAutoP(true); setProAns(true); } }, [secs]);
   const both = client !== null && proAns !== null;
   const agreed = client === true && proAns === true;
+  const Choice = ({ val, set, kind, children }) => {
+    const on = val === (kind === "yes");
+    return (
+      <button
+        onClick={() => set(kind === "yes")}
+        aria-pressed={on}
+        className={cn(
+          "flex flex-1 items-center justify-center gap-1.5 rounded-md border-[1.5px] py-2.5 text-[14px] font-bold transition active:scale-95",
+          on && kind === "yes" && "border-trust bg-trust/10 text-status-completed",
+          on && kind === "no" && "border-destructive bg-destructive/10 text-destructive",
+          !on && "border-border bg-card text-foreground",
+        )}
+      >
+        {kind === "yes" ? <Check size={15} /> : <X size={15} />}
+        {children}
+      </button>
+    );
+  };
   const Row = ({ label, who, val, set, auto }) => (
-    <div className="rounded-2xl p-4 mt-3" style={{ border: `1px solid ${C.line}` }}>
-      <div className="flex items-center justify-between"><div style={{ fontWeight: 700, fontSize: 14.5 }}>{label}</div>{auto && <span className="rounded-full px-2 py-0.5" style={{ background: "#E8F0FE", color: C.blue, fontSize: 10.5, fontWeight: 700 }}>Auto-confirmed</span>}</div>
-      <div style={{ color: C.sub, fontSize: 12.5, marginTop: 1 }}>{who}</div>
-      <div className="flex gap-2 mt-3">
-        <button onClick={() => set(true)} className="flex-1 rounded-xl py-2.5 active:scale-95 transition" style={{ border: `1.5px solid ${val === true ? C.green : C.line}`, background: val === true ? "#E7F6EE" : "#fff", color: val === true ? "#0B7A4D" : C.ink, fontWeight: 700, fontSize: 14 }}>Completed</button>
-        <button onClick={() => set(false)} className="flex-1 rounded-xl py-2.5 active:scale-95 transition" style={{ border: `1.5px solid ${val === false ? C.red : C.line}`, background: val === false ? "#FDECEC" : "#fff", color: val === false ? "#B42318" : C.ink, fontWeight: 700, fontSize: 14 }}>Not completed</button>
+    <div className="mt-3 rounded-lg border border-border bg-card p-4">
+      <div className="flex items-center justify-between">
+        <div className="text-[14.5px] font-bold">{label}</div>
+        {auto && <span className="rounded-full bg-accent px-2 py-0.5 text-[10.5px] font-bold text-accent-foreground">Auto-confirmed</span>}
+        {!auto && val !== null && <span className={cn("text-[10.5px] font-bold uppercase tracking-wide", val ? "text-status-completed" : "text-destructive")}>{val ? "Completed" : "Not completed"}</span>}
+      </div>
+      <div className="mt-0.5 text-[12.5px] font-medium text-muted-foreground">{who}</div>
+      <div className="mt-3 flex gap-2">
+        <Choice val={val} set={set} kind="yes">Completed</Choice>
+        <Choice val={val} set={set} kind="no">Not completed</Choice>
       </div>
     </div>
   );
   return (
-    <div className="h-full flex flex-col" style={{ background: C.sheet }}>
+    <div className="flex h-full flex-col bg-card">
       <Header title="Confirm completion" onBack={onBack} />
       <div className="flex-1 overflow-auto px-5">
-        <div style={{ color: C.sub, fontSize: 13.5, lineHeight: 1.45 }} className="mt-1">Both sides confirm before payment is released — if you disagree it goes to review, so neither side can lie. If one side doesn't respond within 24 hours, the job auto-confirms as complete so the pro still gets paid.</div>
+        <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">
+          Both sides confirm before payment is released — if you disagree it goes to review, so neither side can lie. If one side doesn't respond within 24 hours, the job auto-confirms as complete so the pro still gets paid.
+        </p>
+
+        {/* Funds-held trust strip */}
+        <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-secondary p-3.5">
+          <Lock size={17} className="shrink-0 text-foreground" />
+          <span className="text-[12.5px] font-medium leading-snug text-muted-foreground">
+            {amount != null ? <><Money amount={amount} size="sm" /> is </> : "Payment is "}
+            held securely in escrow — released the moment you both confirm.
+          </span>
+        </div>
+
         {secs > 0 ? (
-          <div className="rounded-2xl p-3 mt-3 flex items-center gap-2.5" style={{ background: "#E8F0FE" }}><Clock size={16} color={C.blue} /><span style={{ fontSize: 12.5, color: "#174EA6", fontWeight: 600 }}>Auto-confirms in 24h if no response · demo: {secs}s</span></div>
+          <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-status-requested/10 p-3">
+            <Clock size={16} className="text-status-requested" />
+            <span className="tnum text-[12.5px] font-semibold text-status-requested">Auto-confirms in 24h if no response · demo: {secs}s</span>
+          </div>
         ) : (autoC || autoP) ? (
-          <div className="rounded-2xl p-3 mt-3 flex items-center gap-2.5" style={{ background: "#E8F0FE" }}><Check size={16} color={C.blue} /><span style={{ fontSize: 12.5, color: "#174EA6", fontWeight: 600 }}>Window elapsed — unanswered side auto-confirmed as complete.</span></div>
+          <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-status-requested/10 p-3">
+            <Check size={16} className="text-status-requested" />
+            <span className="text-[12.5px] font-semibold text-status-requested">Window elapsed — unanswered side auto-confirmed as complete.</span>
+          </div>
         ) : null}
+
         <Row label="Customer's confirmation" who={customerName || "Customer"} val={client} set={setClient} auto={autoC} />
         <Row label="Pro's confirmation" who={proName || "Pro"} val={proAns} set={setProAns} auto={autoP} />
-        {both && <div className="rounded-2xl p-3 mt-4 flex gap-2.5" style={{ background: agreed ? "#E7F6EE" : "#FDECEC" }}>{agreed ? <Check size={18} color={C.green} style={{ flexShrink: 0, marginTop: 1 }} /> : <AlertTriangle size={18} color={C.red} style={{ flexShrink: 0, marginTop: 1 }} />}<span style={{ fontSize: 12.5, fontWeight: 600, color: agreed ? "#0B7A4D" : "#B42318", lineHeight: 1.4 }}>{agreed ? "Both confirmed — payment will be released." : "Disagreement — sent to Aquilla for review and payment is held."}</span></div>}
+
+        {both && (
+          <div className={cn("mt-4 flex gap-2.5 rounded-lg p-3.5", agreed ? "bg-trust/10" : "bg-destructive/10")}>
+            {agreed ? <Check size={18} className="mt-0.5 shrink-0 text-status-completed" /> : <AlertTriangle size={18} className="mt-0.5 shrink-0 text-destructive" />}
+            <div>
+              <div className={cn("text-[13.5px] font-bold", agreed ? "text-status-completed" : "text-destructive")}>
+                {agreed ? "Both confirmed — releasing payment" : "Disagreement — funds stay held"}
+              </div>
+              <div className={cn("mt-0.5 text-[12.5px] leading-snug", agreed ? "text-status-completed/90" : "text-destructive/90")}>
+                {agreed
+                  ? "The pro is paid out instantly, minus Aquilla's fee."
+                  : "Sent to Aquilla for review. Nobody is paid until it's resolved."}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      <div className="px-5 pb-6 pt-3"><button disabled={!both} onClick={() => onResolve(agreed)} className="w-full rounded-2xl active:scale-[.98] transition" style={{ background: !both ? "#C9CACE" : agreed ? C.green : C.red, color: "#fff", height: 54, fontWeight: 700, fontSize: 16 }}>{!both ? "Waiting on both sides…" : agreed ? "Release payment" : "Send to review"}</button></div>
+      <div className="px-5 pb-6 pt-3">
+        <button
+          disabled={!both}
+          onClick={() => onResolve(agreed)}
+          className={cn(
+            "h-[54px] w-full rounded-md text-[16px] font-bold text-white transition active:scale-[.98] disabled:opacity-100",
+            !both ? "bg-muted-foreground/40" : agreed ? "bg-trust" : "bg-destructive",
+          )}
+        >
+          {!both ? "Waiting on both sides…" : agreed ? "Release payment" : "Send to review"}
+        </button>
+      </div>
     </div>
   );
 }
