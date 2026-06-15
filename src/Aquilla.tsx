@@ -1063,70 +1063,102 @@ function ProOnboarding({ initial, editing, onDone, onCancel }) {
     : step === 1 ? area.trim().length > 1
     : step === 2 ? (bg && (!needsLicense || (lic.trim() && licState.trim() && insured)))
     : true;
+  // Tell the pro exactly what's missing rather than just disabling the button.
+  const hint = canNext ? null
+    : step === 0 ? "Pick at least one trade to continue"
+    : step === 1 ? "Enter the city or ZIP you work in"
+    : step === 2 ? (needsLicense ? "Add your license number, state, insurance & consent" : "Consent to a background check to continue")
+    : null;
   const back = () => (step === 0 ? onCancel() : setStep(step - 1));
   const next = () => { if (step < 3) setStep(step + 1); else onDone({ trades, exp, area: area.trim(), radius, license: needsLicense ? { number: lic.trim(), state: licState.trim().toUpperCase() } : null, insured }); };
-  const Box = ({ on }) => <div className="rounded-md flex items-center justify-center shrink-0" style={{ width: 22, height: 22, border: `2px solid ${on ? C.ink : "#C9CACE"}`, background: on ? C.ink : "#fff" }}>{on && <Check size={14} color="#fff" strokeWidth={3} />}</div>;
+  const Box = ({ on }) => <div className={cn("flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-sm border-2 transition-colors", on ? "border-primary bg-primary" : "border-muted-foreground/40 bg-card")}>{on && <Check size={14} color="#fff" strokeWidth={3} />}</div>;
+  const chip = (on) => cn("rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95", on ? "bg-primary text-primary-foreground" : "border-[1.5px] border-border bg-card text-foreground");
+  const inputCls = "mt-2 h-[54px] w-full rounded-md bg-secondary px-4 text-[16px] outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  const eyebrow = "text-[13px] font-bold uppercase tracking-wide text-muted-foreground";
 
   return (
-    <div className="h-full flex flex-col" style={{ background: C.sheet }}>
-      <div className="px-4 pt-12 pb-2 flex items-center gap-3"><button onClick={back} className="active:scale-90 transition"><ChevronLeft size={24} /></button><span style={{ fontWeight: 800, fontSize: 18 }}>{editing ? "Edit pro profile" : "Become an Aquilla Pro"}</span></div>
-      <div className="px-5 flex gap-1.5 mb-1">{STEPS.map((_, i) => <div key={i} className="h-1 flex-1 rounded-full" style={{ background: i <= step ? C.ink : C.line, transition: "background .3s" }} />)}</div>
+    <div className="flex h-full flex-col bg-card">
+      <div className="flex items-center gap-3 px-4 pb-2 pt-12">
+        <button onClick={back} className="transition active:scale-90"><ChevronLeft size={24} /></button>
+        <span className="text-[18px] font-extrabold">{editing ? "Edit pro profile" : "Become an Aquilla Pro"}</span>
+      </div>
 
-      <div className="flex-1 overflow-auto px-5 pt-3">
+      {/* Stepper: counter + current label + segmented progress */}
+      <div className="px-5 pt-1">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[12px] font-bold uppercase tracking-wide text-primary">Step {step + 1} of {STEPS.length}</span>
+          <span className="text-[12px] font-semibold text-muted-foreground">{STEPS[step]}</span>
+        </div>
+        <div className="flex gap-1.5">
+          {STEPS.map((_, i) => (
+            <div key={i} className={cn("h-1.5 flex-1 rounded-full transition-colors duration-300", i <= step ? "bg-primary" : "bg-border")} />
+          ))}
+        </div>
+      </div>
+
+      <div key={step} className="animate-fade-up flex-1 overflow-auto px-5 pt-4">
         {step === 0 && (<>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>What services do you offer?</div>
-          <div style={{ color: C.sub, fontSize: 14, marginTop: 4 }}>Pick all that apply — you'll only get matching jobs.</div>
-          <div className="grid grid-cols-2 gap-3 mt-4">
+          <h2 className="text-[22px] font-extrabold tracking-tight">What services do you offer?</h2>
+          <p className="mt-1 text-[14px] text-muted-foreground">Pick all that apply — you'll only get matching jobs.</p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
             {TRADES.filter((t) => !t.open).map((t) => { const Icon = t.icon; const on = trades.includes(t.id); return (
-              <button key={t.id} onClick={() => toggle(t.id)} className="text-left rounded-2xl p-4 transition active:scale-[.97]" style={{ border: `1.5px solid ${on ? C.ink : C.line}`, background: on ? C.sel : "#fff" }}>
-                <div className="flex items-center justify-between"><div className="rounded-xl flex items-center justify-center" style={{ background: "#fff", width: 40, height: 40 }}><Icon size={20} /></div><Box on={on} /></div>
-                <div className="mt-3" style={{ fontWeight: 700, fontSize: 14.5 }}>{t.name}</div>
-                {t.licReq && <div style={{ fontSize: 11, color: C.green, fontWeight: 700, marginTop: 1 }}>License required</div>}
+              <button key={t.id} onClick={() => toggle(t.id)} aria-pressed={on} className={cn("rounded-lg border-[1.5px] p-4 text-left transition active:scale-[.97]", on ? "border-primary bg-accent ring-1 ring-primary" : "border-border bg-card")}>
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-card"><Icon size={20} className={on ? "text-primary" : "text-foreground"} /></div>
+                  <Box on={on} />
+                </div>
+                <div className="mt-3 text-[14.5px] font-bold">{t.name}</div>
+                {t.licReq && <div className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-trust"><Shield size={11} /> License required</div>}
               </button>); })}
           </div>
-          <div className="mt-5" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>EXPERIENCE</div>
-          <div className="flex flex-wrap gap-2 mt-2">{["< 1 yr", "1–3 yrs", "3–5 yrs", "5+ yrs"].map((e) => { const on = exp === e; return <button key={e} onClick={() => setExp(e)} className="rounded-full px-4 py-2 text-sm active:scale-95 transition" style={{ border: `1.5px solid ${on ? C.ink : C.line}`, background: on ? C.ink : "#fff", color: on ? "#fff" : C.ink, fontWeight: 600 }}>{e}</button>; })}</div>
+          <div className={cn("mt-5", eyebrow)}>Experience</div>
+          <div className="mt-2 flex flex-wrap gap-2">{["< 1 yr", "1–3 yrs", "3–5 yrs", "5+ yrs"].map((e) => <button key={e} onClick={() => setExp(e)} className={chip(exp === e)}>{e}</button>)}</div>
         </>)}
 
         {step === 1 && (<>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>Where do you work?</div>
-          <div style={{ color: C.sub, fontSize: 14, marginTop: 4 }}>We'll only send you jobs inside your area.</div>
-          <div className="mt-4" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>CITY OR ZIP</div>
-          <input value={area} onChange={(e) => setArea(e.target.value)} autoFocus placeholder="e.g. Brooklyn, NY or 11201" className="w-full rounded-2xl px-4 mt-2 outline-none text-[16px]" style={{ background: C.sel, height: 54 }} />
-          <div className="mt-5" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>SERVICE RADIUS</div>
-          <div className="flex flex-wrap gap-2 mt-2">{[5, 10, 20, 50].map((m) => { const on = radius === m; return <button key={m} onClick={() => setRadius(m)} className="rounded-full px-4 py-2 text-sm active:scale-95 transition" style={{ border: `1.5px solid ${on ? C.ink : C.line}`, background: on ? C.ink : "#fff", color: on ? "#fff" : C.ink, fontWeight: 600 }}>{m} mi</button>; })}</div>
+          <h2 className="text-[22px] font-extrabold tracking-tight">Where do you work?</h2>
+          <p className="mt-1 text-[14px] text-muted-foreground">We'll only send you jobs inside your area.</p>
+          <div className={cn("mt-4", eyebrow)}>City or ZIP</div>
+          <input value={area} onChange={(e) => setArea(e.target.value)} autoFocus placeholder="e.g. Brooklyn, NY or 11201" className={inputCls} />
+          <div className={cn("mt-5", eyebrow)}>Service radius</div>
+          <div className="mt-2 flex flex-wrap gap-2">{[5, 10, 20, 50].map((m) => <button key={m} onClick={() => setRadius(m)} className={chip(radius === m)}>{m} mi</button>)}</div>
         </>)}
 
         {step === 2 && (<>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>Credentials & trust</div>
+          <h2 className="text-[22px] font-extrabold tracking-tight">Credentials & trust</h2>
           {needsLicense ? (<>
-            <div className="rounded-xl p-3 mt-4 flex gap-2.5" style={{ background: "#E7F6EE" }}><Shield size={16} color={C.green} style={{ marginTop: 1, flexShrink: 0 }} /><span style={{ fontSize: 12.5, color: "#0B7A4D", lineHeight: 1.4 }}>{licensedNames.join(", ")} require a verified license & insurance.</span></div>
-            <div className="mt-4" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>LICENSE NUMBER</div>
-            <input value={lic} onChange={(e) => setLic(e.target.value)} placeholder="License #" className="w-full rounded-2xl px-4 mt-2 outline-none text-[16px]" style={{ background: C.sel, height: 54 }} />
-            <div className="mt-3" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>ISSUING STATE</div>
-            <input value={licState} onChange={(e) => setLicState(e.target.value)} maxLength={2} placeholder="e.g. NY" className="w-full rounded-2xl px-4 mt-2 outline-none text-[16px]" style={{ background: C.sel, height: 54, textTransform: "uppercase" }} />
-            <button onClick={() => setInsured((v) => !v)} className="flex items-center gap-3 mt-4 w-full text-left"><Box on={insured} /><span style={{ fontWeight: 600, fontSize: 14.5 }}>I carry liability insurance</span></button>
+            <div className="mt-4 flex gap-2.5 rounded-md bg-trust/10 p-3"><Shield size={16} className="mt-0.5 shrink-0 text-trust" /><span className="text-[12.5px] leading-snug text-status-completed">{licensedNames.join(", ")} require a verified license & insurance.</span></div>
+            <div className={cn("mt-4", eyebrow)}>License number</div>
+            <input value={lic} onChange={(e) => setLic(e.target.value)} placeholder="License #" className={inputCls} />
+            <div className={cn("mt-3", eyebrow)}>Issuing state</div>
+            <input value={licState} onChange={(e) => setLicState(e.target.value)} maxLength={2} placeholder="e.g. NY" className={cn(inputCls, "uppercase")} />
+            <button onClick={() => setInsured((v) => !v)} className="mt-4 flex w-full items-center gap-3 text-left"><Box on={insured} /><span className="text-[14.5px] font-semibold">I carry liability insurance</span></button>
           </>) : (
-            <div className="rounded-xl p-3 mt-4" style={{ background: C.sel, color: C.sub, fontSize: 13, lineHeight: 1.45 }}>Your selected trades don't require a license. You'll still be background-checked before going live.</div>
+            <div className="mt-4 rounded-md bg-secondary p-3 text-[13px] leading-relaxed text-muted-foreground">Your selected trades don't require a license. You'll still be background-checked before going live.</div>
           )}
-          <button onClick={() => setBg((v) => !v)} className="flex items-center gap-3 mt-4 w-full text-left"><Box on={bg} /><span style={{ fontWeight: 600, fontSize: 14.5 }}>I consent to a background check</span></button>
+          <button onClick={() => setBg((v) => !v)} className="mt-4 flex w-full items-center gap-3 text-left"><Box on={bg} /><span className="text-[14.5px] font-semibold">I consent to a background check</span></button>
         </>)}
 
         {step === 3 && (<>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>Review & go live</div>
-          <div className="rounded-2xl p-4 mt-4" style={{ border: `1px solid ${C.line}` }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.sub }}>SERVICES</div>
-            <div className="flex flex-wrap gap-1.5 mt-2">{trades.map((id) => <span key={id} className="rounded-full px-2.5 py-1" style={{ background: C.sel, fontSize: 12, fontWeight: 600 }}>{tradeById(id).name}</span>)}</div>
-            <div className="flex justify-between mt-4 pt-3" style={{ borderTop: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14 }}>Experience</span><span style={{ fontWeight: 600 }}>{exp || "—"}</span></div>
-            <div className="flex justify-between mt-2"><span style={{ color: C.sub, fontSize: 14 }}>Area</span><span style={{ fontWeight: 600 }}>{area} · {radius} mi</span></div>
-            <div className="flex justify-between mt-2"><span style={{ color: C.sub, fontSize: 14 }}>License</span><span style={{ fontWeight: 600 }}>{needsLicense ? `${lic} (${licState.toUpperCase()})` : "Not required"}</span></div>
-            <div className="flex justify-between mt-2"><span style={{ color: C.sub, fontSize: 14 }}>Background check</span><span style={{ fontWeight: 600, color: C.green }}>Consented</span></div>
+          <h2 className="text-[22px] font-extrabold tracking-tight">Review & go live</h2>
+          <div className="mt-4 rounded-lg border border-border p-4">
+            <div className={eyebrow}>Services</div>
+            <div className="mt-2 flex flex-wrap gap-1.5">{trades.map((id) => <span key={id} className="rounded-full bg-secondary px-2.5 py-1 text-[12px] font-semibold">{tradeById(id).name}</span>)}</div>
+            <div className="mt-4 flex justify-between border-t border-border pt-3"><span className="text-[14px] text-muted-foreground">Experience</span><span className="font-semibold">{exp || "—"}</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-[14px] text-muted-foreground">Area</span><span className="font-semibold">{area} · {radius} mi</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-[14px] text-muted-foreground">License</span><span className="font-semibold">{needsLicense ? `${lic} (${licState.toUpperCase()})` : "Not required"}</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-[14px] text-muted-foreground">Background check</span><span className="flex items-center gap-1 font-semibold text-trust"><Check size={14} /> Consented</span></div>
           </div>
-          <div className="mt-3 px-1" style={{ color: C.sub, fontSize: 12.5, lineHeight: 1.4 }}>Verification usually completes within 24 hours. You can start receiving jobs once approved.</div>
+          <p className="mt-3 px-1 text-[12.5px] leading-relaxed text-muted-foreground">Verification usually completes within 24 hours. You can start receiving jobs once approved.</p>
         </>)}
       </div>
 
-      <div className="px-5 pb-6 pt-3"><button disabled={!canNext} onClick={next} className="w-full rounded-2xl flex items-center justify-center gap-2 active:scale-[.98] transition" style={{ background: canNext ? C.ink : "#C9CACE", color: "#fff", height: 54, fontWeight: 700, fontSize: 16 }}>{step < 3 ? "Continue" : editing ? "Save changes" : "Go live as a pro"} <ArrowRight size={18} /></button></div>
+      <div className="px-5 pb-6 pt-3">
+        {hint && <p className="mb-2 text-center text-[12.5px] font-semibold text-muted-foreground">{hint}</p>}
+        <Button size="lg" disabled={!canNext} onClick={next} className="w-full">
+          {step < 3 ? "Continue" : editing ? "Save changes" : "Go live as a pro"} <ArrowRight size={18} />
+        </Button>
+      </div>
     </div>
   );
 }
