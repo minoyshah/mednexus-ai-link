@@ -1,179 +1,99 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
-interface Profile {
-  id: string;
-  user_id: string;
-  email: string | null;
-  full_name: string | null;
-  headline: string | null;
-  avatar_url: string | null;
-  about: string | null;
-  medical_role: string | null;
-  primary_specialty: string | null;
-  subspecialty: string | null;
-  clinical_interests: string[] | null;
-  research_interests: string[] | null;
-  institution: string | null;
-  institution_email: string | null;
-  institution_verified: boolean | null;
-  is_premium: boolean | null;
-  onboarding_completed: boolean | null;
-}
-
-interface VerificationStatus {
-  hasCredentials: boolean;
-  isVerified: boolean;
-  isPending: boolean;
-}
-
-interface AuthContextType {
-  user: User | null;
+/**
+ * Aquilla auth, backed entirely by Supabase Auth. Mirrors the prototype's flow:
+ * phone number → 6-digit OTP → verify, plus Apple/Google one-tap. No passwords.
+ *
+ * This is intentionally thin — it only manages the session and exposes the
+ * Supabase auth calls. All authorization (who may touch a job, a price, a
+ * payout) is enforced server-side by RLS and Edge Functions, never here.
+ */
+interface AuthContextValue {
   session: Session | null;
-  profile: Profile | null;
-  verificationStatus: VerificationStatus;
+  user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  /** Send a 6-digit OTP to a phone number in E.164 form (e.g. +15550123456). */
+  sendPhoneOtp: (phone: string) => Promise<void>;
+  /** Verify the OTP code for a phone number; resolves to the signed-in session. */
+  verifyPhoneOtp: (phone: string, token: string) => Promise<Session | null>;
+  signInWithApple: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({
-    hasCredentials: false,
-    isVerified: false,
-    isPending: false,
-  });
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching profile:', error);
-      return null;
-    }
-    return data;
-  };
-
-  const fetchVerificationStatus = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('credentials')
-      .select('verification_status')
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('Error fetching verification status:', error);
-      return { hasCredentials: false, isVerified: false, isPending: false };
-    }
-
-    const hasCredentials = data && data.length > 0;
-    const isVerified = data?.some(c => c.verification_status === 'verified') || false;
-    const isPending = data?.some(c => c.verification_status === 'pending') || false;
-
-    return { hasCredentials, isVerified, isPending };
-  };
-
-  const refreshProfile = async () => {
-    if (user) {
-      const profileData = await fetchProfile(user.id);
-      setProfile(profileData);
-      const verStatus = await fetchVerificationStatus(user.id);
-      setVerificationStatus(verStatus);
-    }
-  };
-
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id).then(setProfile);
-            fetchVerificationStatus(session.user.id).then(setVerificationStatus);
-          }, 0);
-        } else {
-          setProfile(null);
-          setVerificationStatus({ hasCredentials: false, isVerified: false, isPending: false });
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        fetchProfile(session.user.id).then(setProfile);
-        fetchVerificationStatus(session.user.id).then(setVerificationStatus);
-      }
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
       setLoading(false);
     });
-
-    return () => subscription.unsubscribe();
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? new Error(error.message) : null };
-  };
+  const value = useMemo<AuthContextValue>(() => {
+    const redirectTo =
+      typeof window !== "undefined" ? `${window.location.origin}/app` : undefined;
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        },
+    return {
+      session,
+      user: session?.user ?? null,
+      loading,
+      async sendPhoneOtp(phone) {
+        const { error } = await supabase.auth.signInWithOtp({ phone });
+        if (error) throw error;
       },
-    });
-    return { error: error ? new Error(error.message) : null };
-  };
+      async verifyPhoneOtp(phone, token) {
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone,
+          token,
+          type: "sms",
+        });
+        if (error) throw error;
+        return data.session;
+      },
+      async signInWithApple() {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "apple",
+          options: { redirectTo },
+        });
+        if (error) throw error;
+      },
+      async signInWithGoogle() {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo },
+        });
+        if (error) throw error;
+      },
+      async signOut() {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      },
+    };
+  }, [session, loading]);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        profile,
-        verificationStatus,
-        loading,
-        signIn,
-        signUp,
-        signOut,
-        refreshProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
 }

@@ -1,5 +1,5 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "aquilla",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify:schema": "set -a; . ./.env.local; set +a; psql \"$SUPABASE_DB_URL\" -v ON_ERROR_STOP=1 -f scripts/aquilla-verify/verify_schema.sql",
+    "verify:stripe": "npm --prefix scripts/aquilla-verify install && npm --prefix scripts/aquilla-verify run stripe"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
