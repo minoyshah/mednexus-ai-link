@@ -10,7 +10,7 @@ import {
   User, HelpCircle, Wallet, Settings, MessageSquare, Gift, Pencil, LogOut, LayoutGrid, Plus, MoreHorizontal,
   AlertTriangle,
 } from "lucide-react";
-import { LiveMap, MapExperience, EarningsDashboard, StatusPill, Money, MOCK_CENTER, offsetByMiles } from "@/components/aquilla";
+import { LiveMap, MapExperience, EarningsDashboard, StatusPill, Money, ListRow, RowIcon, EmptyState, toJobStatus, MOCK_CENTER, offsetByMiles } from "@/components/aquilla";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -308,22 +308,45 @@ function ServicesTab({ onPick }) {
 
 /* ---------- ACTIVITY TAB ---------- */
 function ActivityTab({ trips, onOpen }) {
-  const [seg, setSeg] = useState("past");
-  const list = seg === "past" ? trips : [];
+  const [filter, setFilter] = useState("all");
+  const cat = (t) => { const s = toJobStatus(t.status); return (s === "completed" || s === "visit_fee") ? "completed" : s === "cancelled" ? "cancelled" : "active"; };
+  const counts = { active: trips.filter((t) => cat(t) === "active").length, completed: trips.filter((t) => cat(t) === "completed").length };
+  const FILTERS = [["all", "All"], ["active", "In progress"], ["completed", "Completed"]];
+  const list = trips.filter((t) => filter === "all" || cat(t) === filter);
+  const empty = filter === "active"
+    ? { title: "Nothing in progress", body: "Jobs you've booked will appear here while they're underway." }
+    : filter === "completed"
+    ? { title: "No completed trips yet", body: "Finished jobs and their receipts land here." }
+    : { title: "No trips yet", body: "Book a pro and your jobs will show up here." };
   return (
-    <div style={{ background: C.sheet }}>
-      <div className="px-5 pt-12 pb-3"><div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Activity</div></div>
-      <div className="px-5"><div className="rounded-full p-1 flex" style={{ background: C.sel }}>{[["past", "Past"], ["upcoming", "Upcoming"]].map(([v, l]) => <button key={v} onClick={() => setSeg(v)} className="flex-1 rounded-full py-2 text-sm transition" style={{ background: seg === v ? "#fff" : "transparent", fontWeight: 700, boxShadow: seg === v ? "0 1px 4px rgba(0,0,0,.1)" : "none" }}>{l}</button>)}</div></div>
-      <div className="px-5 mt-4 pb-6">
-        {list.length === 0 ? <div className="text-center py-16" style={{ color: C.sub }}><Clock size={34} className="mx-auto mb-3" /><div style={{ fontWeight: 700 }}>No upcoming trips</div><div style={{ fontSize: 13, marginTop: 2 }}>Booked jobs will show up here.</div></div>
-          : list.map((t, i) => { const Icon = tradeById(t.tradeId).icon; return (
-            <button key={t.id} onClick={() => onOpen(t)} className="row w-full flex items-center gap-3 rounded-2xl px-3 py-3 mb-2 transition active:scale-[.98]" style={{ border: `1px solid ${C.line}`, animationDelay: `${i * 45}ms` }}>
-              <div className="rounded-xl flex items-center justify-center" style={{ background: C.sel, width: 46, height: 46 }}><Icon size={21} /></div>
-              <div className="flex-1 text-left"><div style={{ fontWeight: 700, fontSize: 15.5 }}>{tradeById(t.tradeId).name}</div><div style={{ color: C.sub, fontSize: 12.5 }}>{t.problem} · {t.date}</div>
-                <div className="mt-1">{t.status === "Disputed" ? <span className="rounded-full px-2 py-0.5" style={{ background: "#FDECEC", fontSize: 10.5, fontWeight: 700, color: C.red }}>Disputed - under review</span> : t.status === "Awaiting part" ? <span className="rounded-full px-2 py-0.5" style={{ background: "#E8F0FE", fontSize: 10.5, fontWeight: 700, color: C.blue }}>Awaiting part - returns {t.returnDate}</span> : t.rating ? <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.gold, fontWeight: 700 }}><Star size={12} fill={C.gold} color={C.gold} />{t.rating}.0</span> : <span className="rounded-full px-2 py-0.5" style={{ background: "#FFF1DD", fontSize: 10.5, fontWeight: 700, color: "#B7791F" }}>Rate your pro</span>}</div>
+    <div className="bg-card">
+      <div className="px-5 pb-3 pt-12"><h1 className="text-[26px] font-extrabold tracking-tight">Activity</h1></div>
+      <div className="flex gap-2 overflow-x-auto px-5 pb-1">
+        {FILTERS.map(([v, l]) => (
+          <button key={v} onClick={() => setFilter(v)} aria-pressed={filter === v} className={cn("whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-bold transition", filter === v ? "bg-foreground text-background" : "bg-secondary text-muted-foreground")}>
+            {l}{v !== "all" && counts[v] > 0 ? ` · ${counts[v]}` : ""}
+          </button>
+        ))}
+      </div>
+      <div className="mt-4 px-5 pb-6">
+        {list.length === 0 ? (
+          <EmptyState icon={Clock} title={empty.title} body={empty.body} />
+        ) : list.map((t, i) => { const Icon = tradeById(t.tradeId).icon; const done = cat(t) === "completed"; return (
+          <button key={t.id} onClick={() => onOpen(t)} className="row mb-2.5 flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3.5 text-left shadow-card transition active:scale-[.98]" style={{ animationDelay: `${i * 45}ms` }}>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-secondary"><Icon size={21} className="text-foreground" /></span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[15.5px] font-bold">{tradeById(t.tradeId).name}</div>
+              <div className="mt-0.5 truncate text-[12.5px] text-muted-foreground">{t.problem} · {t.date}{t.status === "Awaiting part" && t.returnDate ? ` · returns ${t.returnDate}` : ""}</div>
+              <div className="mt-1.5">
+                {done
+                  ? (t.rating
+                    ? <span className="inline-flex items-center gap-1 text-[12px] font-bold text-premium"><Star size={12} fill="currentColor" />{t.rating}.0</span>
+                    : <span className="rounded-full bg-premium/15 px-2 py-0.5 text-[10.5px] font-bold text-premium">Rate your pro</span>)
+                  : <StatusPill status={t.status} appearance="tint" className="px-2 py-0.5" />}
               </div>
-              <div className="text-right"><div style={{ fontWeight: 800 }}>${t.price}</div><ChevronRight size={16} color={C.sub} className="ml-auto mt-1" /></div>
-            </button>); })}
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1"><Money amount={t.price} size="md" /><ChevronRight size={16} className="text-muted-foreground/60" /></div>
+          </button>); })}
       </div>
     </div>
   );
@@ -334,21 +357,29 @@ function AccountTab({ profile, onNav }) {
   const cards = [["help", "Help", HelpCircle], ["wallet", "Wallet", Wallet], ["activity", "Activity", Clock]];
   const menu = [["pro", "Switch to Pro mode", Wrench], ["reviews", "Your reviews", Star], ["feedback", "Send feedback", MessageSquare], ["editProfile", "Edit profile", Pencil], ["promos", "Promotions", Gift], ["settings", "Settings", Settings], ["signout", "Sign out", LogOut]];
   return (
-    <div style={{ background: C.sheet }}>
-      <div className="px-5 pt-12 pb-2"><div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Account</div></div>
-      <button onClick={() => onNav("editProfile")} className="w-full px-5 py-3 flex items-center gap-3 active:opacity-70 transition">
-        <div className="rounded-full flex items-center justify-center font-bold" style={{ width: 60, height: 60, background: C.ink, color: "#fff", fontSize: 24 }}>{profile.name[0]}</div>
-        <div className="flex-1 text-left"><div style={{ fontWeight: 800, fontSize: 20 }}>{profile.name}</div><div className="flex items-center gap-1" style={{ color: C.sub, fontSize: 13 }}><Star size={13} color={C.gold} fill={C.gold} />{profile.rating} · Customer</div></div>
-        <ChevronRight size={20} color={C.sub} />
+    <div className="bg-card">
+      <div className="px-5 pb-2 pt-12"><h1 className="text-[26px] font-extrabold tracking-tight">Account</h1></div>
+      <button onClick={() => onNav("editProfile")} className="flex w-full items-center gap-3 px-5 py-3 transition active:opacity-70">
+        <span className="grid h-[60px] w-[60px] place-items-center rounded-full bg-foreground text-[24px] font-bold text-background">{profile.name[0]}</span>
+        <span className="flex-1 text-left"><span className="block text-[20px] font-extrabold">{profile.name}</span><span className="mt-0.5 flex items-center gap-1 text-[13px] text-muted-foreground"><Star size={13} className="text-premium" fill="currentColor" />{profile.rating} · Customer</span></span>
+        <ChevronRight size={20} className="text-muted-foreground" />
       </button>
-      <div className="px-5 mt-2 grid grid-cols-3 gap-3">
-        {cards.map(([k, l, Icon]) => <button key={k} onClick={() => onNav(k)} className="rounded-2xl py-4 flex flex-col items-center gap-2 active:scale-95 transition" style={{ background: C.sel }}><Icon size={22} /><span style={{ fontWeight: 700, fontSize: 13 }}>{l}</span></button>)}
+      <div className="mt-2 grid grid-cols-3 gap-3 px-5">
+        {cards.map(([k, l, Icon]) => <button key={k} onClick={() => onNav(k)} className="flex flex-col items-center gap-2 rounded-lg bg-secondary py-4 transition active:scale-95"><Icon size={22} className="text-foreground" /><span className="text-[13px] font-bold">{l}</span></button>)}
       </div>
-      <div className="px-5 mt-5 pb-6">
-        <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.line}` }}>
-          {menu.map(([k, l, Icon], i) => <button key={k} onClick={() => onNav(k)} className="w-full flex items-center gap-3 px-4 py-4 active:bg-neutral-50 transition" style={{ borderTop: i ? `1px solid ${C.line}` : "none", color: k === "signout" ? C.red : C.ink }}><Icon size={20} /><span className="flex-1 text-left" style={{ fontWeight: 600, fontSize: 15 }}>{l}</span>{k !== "signout" && <ChevronRight size={18} color={C.sub} />}</button>)}
+      <div className="mt-5 px-5 pb-6">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
+          {menu.map(([k, l, Icon]) => { const danger = k === "signout"; return (
+            <ListRow
+              key={k}
+              divider
+              onClick={() => onNav(k)}
+              noChevron={danger}
+              leading={<RowIcon className={danger ? "bg-destructive/10 text-destructive" : undefined}><Icon /></RowIcon>}
+              title={danger ? <span className="text-destructive">{l}</span> : l}
+            />); })}
         </div>
-        <div className="text-center mt-6" style={{ color: C.sub, fontSize: 12 }}>Aquilla · v1.0</div>
+        <div className="mt-6 text-center text-[12px] text-muted-foreground">Aquilla · v1.0</div>
       </div>
     </div>
   );
