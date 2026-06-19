@@ -288,17 +288,21 @@ function Welcome({ onAuth, onGuest }) {
 /* ---------- SERVICES TAB ---------- */
 function ServicesTab({ onPick }) {
   return (
-    <div style={{ background: C.sheet }}>
-      <div className="px-5 pt-12 pb-3"><div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Good afternoon</div><div style={{ color: C.sub, fontSize: 15, marginTop: 2 }}>What needs fixing today?</div></div>
-      <div className="px-5"><div className="flex items-center gap-3 rounded-2xl px-4" style={{ background: C.sel, height: 52 }}><Search size={19} /><input placeholder="Describe the problem or pick below" className="bg-transparent outline-none flex-1 text-[15px]" style={{ color: C.ink }} /></div></div>
-      <div className="px-5 mt-6 pb-6">
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, letterSpacing: 0.3 }} className="mb-3">SERVICES</div>
+    <div className="bg-card">
+      <div className="px-5 pb-3 pt-12"><h1 className="text-[26px] font-extrabold tracking-tight">Good afternoon</h1><p className="mt-0.5 text-[15px] text-muted-foreground">What needs fixing today?</p></div>
+      <div className="px-5"><div className="flex h-[52px] items-center gap-3 rounded-md bg-secondary px-4"><Search size={19} className="text-muted-foreground" /><input placeholder="Describe the problem or pick below" className="flex-1 bg-transparent text-[15px] text-foreground outline-none" /></div></div>
+      <div className="mt-6 px-5 pb-6">
+        <div className="mb-3 text-[13px] font-bold uppercase tracking-wide text-muted-foreground">Services</div>
         <div className="grid grid-cols-2 gap-3">
           {TRADES.map((t, i) => { const Icon = t.icon; return (
-            <button key={t.id} onClick={() => onPick(t)} className="row text-left rounded-2xl p-4 transition active:scale-[.97]" style={{ border: `1px solid ${C.line}`, animationDelay: `${i * 30}ms`, background: C.sheet }}>
-              <div className="flex items-center justify-between"><div className="rounded-xl flex items-center justify-center" style={{ background: C.sel, width: 44, height: 44 }}><Icon size={21} color={C.ink} /></div>
-                {t.licReq ? <span className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: "#E7F6EE" }}><Shield size={11} color={C.green} /><span style={{ fontSize: 10, fontWeight: 700, color: C.green }}>Licensed</span></span> : t.tag ? <span className="rounded-full px-2 py-0.5" style={{ background: "#FFF1DD" }}><span style={{ fontSize: 10, fontWeight: 700, color: "#B7791F" }}>{t.tag}</span></span> : null}</div>
-              <div className="mt-4" style={{ fontWeight: 700, fontSize: 16 }}>{t.name}</div><div style={{ color: C.sub, fontSize: 13, marginTop: 1 }}>{t.open ? "Name your price" : `from $${Math.round(t.licReq ? t.rate : t.rate * 0.7)}/${t.unit}`}</div>
+            <button key={t.id} onClick={() => onPick(t)} className="row rounded-lg border border-border bg-card p-4 text-left shadow-card transition active:scale-[.97]" style={{ animationDelay: `${i * 30}ms` }}>
+              <div className="flex items-center justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-md bg-secondary"><Icon size={21} className="text-foreground" /></div>
+                {t.licReq ? <span className="flex items-center gap-1 rounded-full bg-trust/10 px-2 py-0.5"><Shield size={11} className="text-trust" /><span className="text-[10px] font-bold text-trust">Licensed</span></span>
+                  : t.tag ? <span className="rounded-full bg-premium/15 px-2 py-0.5 text-[10px] font-bold text-premium-foreground/80" style={{ color: "hsl(var(--status-visit-fee))" }}>{t.tag}</span> : null}
+              </div>
+              <div className="mt-4 text-[16px] font-bold">{t.name}</div>
+              <div className="mt-0.5 text-[13px] text-muted-foreground">{t.open ? "Name your price" : `from $${Math.round(t.licReq ? t.rate : t.rate * 0.7)}/${t.unit}`}</div>
             </button>); })}
         </div>
       </div>
@@ -396,20 +400,23 @@ function Pros({ trade, tier, setTier, onBack, onPick }) {
         <div className="absolute" style={{ left: "44%", top: "26%" }}><div style={{ background: C.ink, color: "#fff", borderRadius: "16px 16px 16px 4px", padding: "6px 8px" }}><Icon size={18} /></div></div>
         <button onClick={onBack} className="absolute left-4 top-12 rounded-full flex items-center justify-center active:scale-90 transition" style={{ width: 42, height: 42, background: "#fff", boxShadow: "0 2px 10px rgba(0,0,0,.14)" }}><ChevronLeft size={22} /></button>
       </div>
-      <div className="sheet absolute left-0 right-0 bottom-0 flex flex-col" style={{ background: C.sheet, borderRadius: "22px 22px 0 0", top: 240, boxShadow: "0 -8px 30px rgba(0,0,0,.12)" }}>
-        <div className="flex justify-center pt-2.5"><div style={{ width: 38, height: 4, borderRadius: 99, background: "#D9D9DD" }} /></div>
-        <div className="px-5 pt-3 pb-2 flex items-center gap-2"><Icon size={20} /><span style={{ fontWeight: 800, fontSize: 19 }}>Choose a {trade.name.toLowerCase()} pro</span></div>
-        {showToggle ? <div className="px-5 pb-1"><div className="rounded-full p-1 flex" style={{ background: C.sel }}>{[["licensed", "Licensed Pro"], ["quick", "Quick Help"]].map(([v, l]) => <button key={v} onClick={() => setTier(v)} className="flex-1 rounded-full py-2 text-sm transition" style={{ background: tier === v ? "#fff" : "transparent", fontWeight: 700, boxShadow: tier === v ? "0 1px 4px rgba(0,0,0,.1)" : "none" }}>{l}</button>)}</div></div>
-          : <div className="px-5 pb-1"><div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "#E7F6EE" }}><Shield size={15} color={C.green} /><span style={{ fontSize: 12.5, color: "#0B7A4D", fontWeight: 600 }}>{trade.solo ? "Vetted, insured & available 24/7." : `License-verified & insured — required for ${trade.name.toLowerCase()}.`}</span></div></div>}
+      <div className="sheet absolute left-0 right-0 bottom-0 flex flex-col rounded-t-xl bg-card shadow-sheet" style={{ top: 240 }}>
+        <div className="flex justify-center pt-2.5"><div className="h-1 w-10 rounded-full bg-border" /></div>
+        <div className="flex items-center gap-2 px-5 pb-2 pt-3"><Icon size={20} /><span className="text-[19px] font-extrabold">Choose a {trade.name.toLowerCase()} pro</span></div>
+        {showToggle ? <div className="px-5 pb-1"><div className="flex rounded-full bg-secondary p-1">{[["licensed", "Licensed Pro"], ["quick", "Quick Help"]].map(([v, l]) => <button key={v} onClick={() => setTier(v)} aria-pressed={tier === v} className={cn("flex-1 rounded-full py-2 text-sm font-bold transition", tier === v ? "bg-card text-foreground shadow-card" : "text-muted-foreground")}>{l}</button>)}</div></div>
+          : <div className="px-5 pb-1"><div className="flex items-center gap-2 rounded-md bg-trust/10 px-3 py-2"><Shield size={15} className="text-trust" /><span className="text-[12.5px] font-semibold text-status-completed">{trade.solo ? "Vetted, insured & available 24/7." : `License-verified & insured — required for ${trade.name.toLowerCase()}.`}</span></div></div>}
         <div className="flex-1 overflow-auto px-3 pt-2" style={{ paddingBottom: 96 }}>
           {pros.map((p, i) => { const active = sel === p.id; return (
-            <button key={p.id} onClick={() => setSel(p.id)} className="row w-full flex items-center gap-3 rounded-2xl px-3 py-3 mb-1 transition" style={{ background: active ? C.sel : "transparent", border: `1.5px solid ${active ? C.ink : "transparent"}`, animationDelay: `${i * 45}ms` }}>
-              <div className="rounded-full flex items-center justify-center font-bold" style={{ width: 46, height: 46, background: "#E9E9EC", fontSize: 17 }}>{p.name[0]}</div>
-              <div className="flex-1 text-left"><div className="flex items-center gap-1.5" style={{ fontWeight: 700, fontSize: 15.5 }}>{p.name}{p.licensed && <Shield size={13} color={C.green} />}</div><div className="flex items-center gap-1.5" style={{ color: C.sub, fontSize: 12.5 }}><Star size={12} color={C.ink} fill={C.ink} />{p.rating}<span>·</span>{Math.round(p.success * 100)}% completed<span>·</span>{p.eta} min</div></div>
-              <div className="text-right"><div style={{ fontWeight: 800, fontSize: 16 }}>${p.rate}</div><div style={{ color: C.sub, fontSize: 11 }}>/{trade.unit}</div></div>
+            <button key={p.id} onClick={() => setSel(p.id)} aria-pressed={active} className={cn("row mb-1 flex w-full items-center gap-3 rounded-md border-[1.5px] px-3 py-3 text-left transition", active ? "border-primary bg-accent" : "border-transparent")} style={{ animationDelay: `${i * 45}ms` }}>
+              <span className="grid h-[46px] w-[46px] place-items-center rounded-full bg-secondary text-[17px] font-bold">{p.name[0]}</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 text-[15.5px] font-bold">{p.name}{p.licensed && <Shield size={13} className="text-trust" />}</div>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-muted-foreground"><Star size={12} className="text-premium" fill="currentColor" />{p.rating}<span>·</span>{Math.round(p.success * 100)}% completed<span>·</span>{p.eta} min</div>
+              </div>
+              <div className="text-right"><Money amount={p.rate} size="md" /><div className="text-[11px] text-muted-foreground">/{trade.unit}</div></div>
             </button>); })}
         </div>
-        <div className="absolute left-0 right-0 bottom-0 px-5 pb-6 pt-3" style={{ background: "linear-gradient(to top,#fff 70%,transparent)" }}><button onClick={() => onPick(selected)} className="w-full rounded-2xl flex items-center justify-center gap-2 active:scale-[.98] transition" style={{ background: C.ink, color: "#fff", height: 54, fontWeight: 700, fontSize: 16 }}><Send size={17} /> Message {selected.name.split(" ")[0]}</button></div>
+        <div className="absolute inset-x-0 bottom-0 px-5 pb-6 pt-3" style={{ background: "linear-gradient(to top, hsl(var(--card)) 70%, transparent)" }}><Button size="lg" onClick={() => onPick(selected)} className="w-full"><Send size={17} /> Message {selected.name.split(" ")[0]}</Button></div>
       </div>
     </div>
   );
@@ -453,19 +460,26 @@ function Chat({ trade, pro, openJob, jobText, budget, onBack, onAccept }) {
 
 /* ---------- PAY ---------- */
 function Pay({ trade, pro, quote, onBack, onConfirm }) {
-  const { fee, payout } = split(quote.price); const total = quote.price.toFixed(2);
+  const { fee, payout } = split(quote.price);
   return (
-    <div className="h-full flex flex-col" style={{ background: C.sheet }}>
-      <div className="flex items-center gap-3 px-4 pt-12 pb-3"><button onClick={onBack} className="active:scale-90 transition"><ChevronLeft size={24} /></button><span style={{ fontWeight: 800, fontSize: 19 }}>Confirm & pay</span></div>
-      <div className="px-5 flex-1 overflow-auto">
-        <div className="flex items-center gap-3 rounded-2xl p-4 mt-2" style={{ background: C.sel }}><div className="rounded-full flex items-center justify-center font-bold" style={{ width: 48, height: 48, background: "#fff" }}>{pro.name[0]}</div><div className="flex-1"><div className="flex items-center gap-1.5" style={{ fontWeight: 700 }}>{pro.name}{pro.licensed && <Shield size={13} color={C.green} />}</div><div style={{ color: C.sub, fontSize: 13 }}>{trade.name} · {pro.eta} min away</div></div><Clock size={18} color={C.sub} /></div>
-        <div className="mt-5" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>PRICE</div>
-        <div className="mt-2" style={{ borderTop: `1px solid ${C.line}` }}><div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Price set by {pro.name.split(" ")[0]}</span><span style={{ fontWeight: 600 }}>${quote.price.toFixed(2)}</span></div><div className="flex justify-between py-3"><span style={{ fontWeight: 800, fontSize: 16 }}>You pay</span><span style={{ fontWeight: 800, fontSize: 16 }}>${total}</span></div></div>
-        <div className="rounded-2xl p-4 mt-2" style={{ background: C.sel }}><div style={{ fontSize: 12, fontWeight: 700, color: C.sub }} className="mb-2">HOW THIS SPLITS</div><div className="flex justify-between py-1"><span style={{ fontSize: 14, color: C.sub }}>Pro receives</span><span style={{ fontWeight: 700 }}>${payout.toFixed(2)}</span></div><div className="flex justify-between py-1"><span style={{ fontSize: 14, color: C.sub }}>Aquilla service fee (15%)</span><span style={{ fontWeight: 700, color: C.green }}>${fee.toFixed(2)}</span></div></div>
-        <div className="mt-3 flex items-center gap-3 rounded-2xl p-4" style={{ border: `1px solid ${C.line}` }}><CreditCard size={20} /><span className="flex-1" style={{ fontWeight: 600 }}>Visa •••• 4242</span><ChevronRight size={18} color={C.sub} /></div>
-        <div className="flex items-start gap-2 mt-3 px-1" style={{ color: C.sub, fontSize: 12.5, lineHeight: 1.4 }}><Shield size={14} color={C.green} style={{ marginTop: 1, flexShrink: 0 }} /><span>You're only charged once the job is marked complete. A $20 visit fee applies only if it can't be completed - and is credited toward the repair if you proceed.</span></div>
+    <div className="flex h-full flex-col bg-card">
+      <div className="flex items-center gap-3 px-4 pb-3 pt-12"><button onClick={onBack} className="transition active:scale-90"><ChevronLeft size={24} /></button><span className="text-[19px] font-extrabold">Confirm & pay</span></div>
+      <div className="flex-1 overflow-auto px-5">
+        <div className="mt-2 flex items-center gap-3 rounded-lg bg-secondary p-4"><span className="grid h-12 w-12 place-items-center rounded-full bg-card text-[17px] font-bold">{pro.name[0]}</span><div className="flex-1"><div className="flex items-center gap-1.5 font-bold">{pro.name}{pro.licensed && <Shield size={13} className="text-trust" />}</div><div className="text-[13px] text-muted-foreground">{trade.name} · {pro.eta} min away</div></div><Clock size={18} className="text-muted-foreground" /></div>
+        <div className="mt-5 text-[13px] font-bold uppercase tracking-wide text-muted-foreground">Price</div>
+        <div className="mt-2 border-t border-border">
+          <div className="flex items-center justify-between border-b border-border py-3"><span className="text-[14.5px] text-muted-foreground">Price set by {pro.name.split(" ")[0]}</span><Money amount={quote.price} size="sm" /></div>
+          <div className="flex items-center justify-between py-3"><span className="text-[16px] font-extrabold">You pay</span><Money amount={quote.price} size="lg" /></div>
+        </div>
+        <div className="mt-2 rounded-lg bg-secondary p-4">
+          <div className="mb-2 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">How this splits</div>
+          <div className="flex items-center justify-between py-1"><span className="text-[14px] text-muted-foreground">Pro receives</span><Money amount={payout} size="sm" /></div>
+          <div className="flex items-center justify-between py-1"><span className="text-[14px] text-muted-foreground">Aquilla service fee (15%)</span><Money amount={fee} size="sm" className="text-trust" /></div>
+        </div>
+        <div className="mt-2 flex items-center gap-3 rounded-lg border border-border p-4"><CreditCard size={20} /><span className="flex-1 font-semibold">Visa •••• 4242</span><ChevronRight size={18} className="text-muted-foreground" /></div>
+        <div className="mt-3 flex items-start gap-2 px-1 text-[12.5px] leading-relaxed text-muted-foreground"><Shield size={14} className="mt-0.5 shrink-0 text-trust" /><span>You're only charged once the job is marked complete. A $20 visit fee applies only if it can't be completed — and is credited toward the repair if you proceed.</span></div>
       </div>
-      <div className="px-5 pb-6 pt-3"><button onClick={onConfirm} className="w-full rounded-2xl active:scale-[.98] transition" style={{ background: C.ink, color: "#fff", height: 54, fontWeight: 700, fontSize: 16 }}>Confirm {pro.name.split(" ")[0]} · ${total}</button></div>
+      <div className="px-5 pb-6 pt-3"><Button size="lg" onClick={onConfirm} className="w-full">Confirm {pro.name.split(" ")[0]} · <Money amount={quote.price} size="md" className="text-primary-foreground" /></Button></div>
     </div>
   );
 }
@@ -474,28 +488,32 @@ function Pay({ trade, pro, quote, onBack, onConfirm }) {
 function Dispatch({ trade, pro, step, eta, rate, visitBlocked, onMessage, onComplete, onVisitOnly, onNeedsPart, onCancel }) {
   const arrived = step === 3; const arrive = new Date(Date.now() + eta * 60000); const hh = arrive.getHours() % 12 || 12; const mm = String(arrive.getMinutes()).padStart(2, "0");
   return (
-    <div className="h-full relative" style={{ background: C.bg }}>
+    <div className="relative h-full bg-background">
       <div className="absolute inset-0"><StreetMap nav arrived={arrived} /></div>
-      <div className="absolute left-4 right-4 top-12 rounded-2xl flex items-center gap-3 px-4 py-3 fadeUp" style={{ background: "#fff", boxShadow: "0 4px 18px rgba(0,0,0,.16)" }}><div className="rounded-full flex items-center justify-center" style={{ width: 36, height: 36, background: arrived ? "#E7F6EE" : "#E8F0FE" }}>{arrived ? <Check size={18} color={C.green} /> : <Navigation size={16} color={C.blue} fill={C.blue} />}</div><div className="flex-1"><div style={{ fontWeight: 700, fontSize: 14.5 }}>{arrived ? "Arrived at your location" : `${eta} min \u00b7 arriving ${hh}:${mm}`}</div><div style={{ color: C.sub, fontSize: 12 }}>142 Maple Ave</div></div></div>
-      <div className="sheet absolute left-0 right-0 bottom-0" style={{ background: C.sheet, borderRadius: "22px 22px 0 0", boxShadow: "0 -8px 30px rgba(0,0,0,.14)" }}>
-        <div className="flex justify-center pt-2.5"><div style={{ width: 38, height: 4, borderRadius: 99, background: "#D9D9DD" }} /></div>
-        <div className="px-5 pt-3"><div className="flex items-center justify-between"><span style={{ fontWeight: 800, fontSize: 20, color: arrived ? C.green : C.ink }}>{arrived ? "Your pro has arrived" : step === 0 ? "Confirming your pro\u2026" : `${pro.name.split(" ")[0]} is on the way`}</span>{!arrived && step >= 1 && <span style={{ fontWeight: 800, fontSize: 18 }}>{eta}<span style={{ fontSize: 13, color: C.sub, fontWeight: 600 }}> min</span></span>}</div>
-          <div className="flex gap-1.5 mt-3">{STEPS.map((_, i) => <div key={i} className="h-1 flex-1 rounded-full" style={{ background: i <= step ? C.ink : C.line, transition: "background .4s" }} />)}</div>
-          <div className="flex items-center gap-3 rounded-2xl p-3 mt-4" style={{ background: C.sel }}><div className="rounded-full flex items-center justify-center font-bold" style={{ width: 50, height: 50, background: "#fff", fontSize: 18 }}>{pro.name[0]}</div><div className="flex-1"><div className="flex items-center gap-1.5" style={{ fontWeight: 700 }}>{pro.name}{pro.licensed && <Shield size={13} color={C.green} />}</div><div style={{ color: C.sub, fontSize: 13 }}>\u2b50 {pro.rating} \u00b7 {Math.round(rate * 100)}% completion</div></div><button onClick={onMessage} className="rounded-full flex items-center justify-center active:scale-90 transition" style={{ width: 44, height: 44, background: "#fff" }}><Send size={17} /></button><button className="rounded-full flex items-center justify-center" style={{ width: 44, height: 44, background: C.green, color: "#fff" }}><Phone size={17} /></button></div>
+      <div className="fadeUp absolute inset-x-4 top-12 flex items-center gap-3 rounded-md bg-card px-4 py-3 shadow-float"><div className={cn("flex h-9 w-9 items-center justify-center rounded-full", arrived ? "bg-status-arrived/15" : "bg-status-en-route/15")}>{arrived ? <Check size={18} className="text-status-arrived" /> : <Navigation size={16} className="text-status-en-route" fill="currentColor" />}</div><div className="flex-1"><div className="tnum text-[14.5px] font-bold">{arrived ? "Arrived at your location" : `${eta} min \u00b7 arriving ${hh}:${mm}`}</div><div className="text-[12px] text-muted-foreground">142 Maple Ave</div></div></div>
+      <div className="sheet absolute inset-x-0 bottom-0 rounded-t-xl bg-card shadow-sheet">
+        <div className="flex justify-center pt-2.5"><div className="h-1 w-10 rounded-full bg-border" /></div>
+        <div className="px-5 pt-3">
+          <div className="flex items-center justify-between">
+            <span className={cn("text-[20px] font-extrabold", arrived && "text-status-arrived")}>{arrived ? "Your pro has arrived" : step === 0 ? "Confirming your pro\u2026" : `${pro.name.split(" ")[0]} is on the way`}</span>
+            <StatusPill status={arrived ? "arrived" : step === 0 ? "requested" : "en_route"} appearance="tint" />
+          </div>
+          <div className="mt-3 flex gap-1.5">{STEPS.map((_, i) => <div key={i} className={cn("h-1.5 flex-1 rounded-full transition-colors duration-300", i <= step ? "bg-primary" : "bg-border")} />)}</div>
+          <div className="mt-4 flex items-center gap-3 rounded-md bg-secondary p-3"><span className="grid h-[50px] w-[50px] place-items-center rounded-full bg-card text-[18px] font-bold">{pro.name[0]}</span><div className="flex-1"><div className="flex items-center gap-1.5 font-bold">{pro.name}{pro.licensed && <Shield size={13} className="text-trust" />}</div><div className="flex items-center gap-1 text-[13px] text-muted-foreground"><Star size={12} className="text-premium" fill="currentColor" /> {pro.rating} \u00b7 {Math.round(rate * 100)}% completion</div></div><button onClick={onMessage} aria-label="Message pro" className="grid h-11 w-11 place-items-center rounded-full bg-card transition active:scale-90"><Send size={17} /></button><button aria-label="Call pro" className="grid h-11 w-11 place-items-center rounded-full bg-trust text-trust-foreground"><Phone size={17} /></button></div>
         </div>
         <div className="px-5 pb-7 pt-4">
           {arrived ? (
             <div className="flex flex-col gap-2.5">
-              <button onClick={onComplete} className="w-full rounded-2xl active:scale-[.98] transition" style={{ background: C.green, color: "#fff", height: 52, fontWeight: 700, fontSize: 16 }}>Job completed</button>
-              <button onClick={onNeedsPart} className="w-full rounded-2xl active:scale-[.98] transition" style={{ background: C.sel, color: C.ink, height: 50, fontWeight: 700, fontSize: 15 }}>Needs a part \u2014 schedule return</button>
+              <Button variant="trust" size="lg" onClick={onComplete} className="w-full">Job completed</Button>
+              <Button variant="secondary" onClick={onNeedsPart} className="w-full">Needs a part \u2014 schedule return</Button>
               {visitBlocked ? (
-                <div className="rounded-2xl px-3 py-3 flex items-start gap-2" style={{ background: "#FDECEC", border: `1px solid rgba(234,67,53,.3)` }}><AlertTriangle size={16} color={C.red} style={{ marginTop: 1, flexShrink: 0 }} /><span style={{ fontSize: 12.5, color: "#B42318", lineHeight: 1.4 }}>Visit fee paused \u2014 this pro's completion rate is below 50%. Their account is under review and they can't charge for incomplete jobs.</span></div>
+                <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3"><AlertTriangle size={16} className="mt-0.5 shrink-0 text-destructive" /><span className="text-[12.5px] leading-relaxed text-destructive">Visit fee paused \u2014 this pro's completion rate is below 50%. Their account is under review and they can't charge for incomplete jobs.</span></div>
               ) : (
-                <button onClick={onVisitOnly} className="w-full rounded-2xl active:scale-[.98] transition" style={{ border: `1.5px solid ${C.line}`, color: C.sub, height: 48, fontWeight: 700, fontSize: 14 }}>Couldn't be fixed \u2014 charge $20 visit fee</button>
+                <Button variant="outline" onClick={onVisitOnly} className="w-full text-muted-foreground">Couldn't be fixed \u2014 charge $20 visit fee</Button>
               )}
             </div>
           ) : (
-            <button onClick={onCancel} className="w-full rounded-2xl flex items-center justify-center gap-2 active:scale-[.98] transition" style={{ border: `1.5px solid ${C.line}`, color: C.sub, height: 50, fontWeight: 700 }}><X size={16} /> Cancel</button>
+            <Button variant="outline" onClick={onCancel} className="w-full text-muted-foreground"><X size={16} /> Cancel</Button>
           )}
         </div>
       </div>
