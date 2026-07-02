@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Aquilla</string>
+    <string name="title_activity_main">Aquilla</string>
+    <string name="package_name">com.aquilla.app</string>
+    <string name="custom_url_scheme">com.aquilla.app</string>
+</resources>
