@@ -10,13 +10,19 @@ import {
   User, HelpCircle, Wallet, Settings, MessageSquare, Gift, Pencil, LogOut, LayoutGrid, Plus, MoreHorizontal,
   AlertTriangle,
 } from "lucide-react";
+import { LiveMap, MapExperience, EarningsDashboard, StatusPill, Money, ListRow, RowIcon, EmptyState, toJobStatus, MOCK_CENTER, offsetByMiles } from "@/components/aquilla";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
+// Hex mirrors of the Aquilla tokens in index.css (SVG `fill` attributes can't
+// read CSS vars, so the prototype keeps literal values — same palette, one
+// source of truth in the token file).
 const C = {
-  bg: "#E8EAED", sheet: "#FFFFFF", ink: "#000000", sub: "#6B6F76",
-  line: "#ECECEE", sel: "#F4F4F4", green: "#0E9E63", gold: "#FFB400",
-  blue: "#1A73E8", red: "#EA4335",
-  land: "#E9ECEF", water: "#A9D3F0", park: "#C8E2C2", bldg: "#DCDEE2", road: "#FFFFFF", casing: "#CBD0D6",
-  meBubble: "#000000", proBubble: "#F0F1F3",
+  bg: "#F7F8FA", sheet: "#FFFFFF", ink: "#0E1726", sub: "#6B7280",
+  line: "#ECEEF2", sel: "#EEF0F4", green: "#10B981", gold: "#FFB400",
+  blue: "#2E5BFF", red: "#F43F6E",
+  land: "#EAEDF1", water: "#CFE6F7", park: "#DCEBD8", bldg: "#DCDFE4", road: "#FFFFFF", casing: "#DBE0E7",
+  meBubble: "#0E1726", proBubble: "#EEF0F4",
 };
 const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 const FEE_RATE = 0.15; // Aquilla takes 15% of the price the pro sets
@@ -63,29 +69,13 @@ const SEED = [
   { id: 904, tradeId: "elec", proName: "Tanya Okafor", proLicensed: true, problem: "Install fixture", date: "Apr 30", price: 165, status: "Completed", rating: null, review: "" },
 ];
 
-/* ---------- map ---------- */
-const BLDGS = [[20,150,40,28],[66,150,46,28],[160,150,40,30],[250,142,44,30],[314,150,46,28],[20,240,46,34],[160,238,40,32],[314,236,46,34],[96,320,40,30],[244,316,46,32],[314,318,40,30],[20,386,46,30],[96,388,40,28],[244,400,46,30],[160,408,40,28]];
+/* ---------- map ----------
+   StreetMap is now a thin adapter over the real map system (LiveMap): a live,
+   token-styled MapLibre map that lazy-loads and gracefully falls back to the
+   animated stylized canvas where WebGL/tiles are unavailable. The {nav, arrived}
+   contract is unchanged so every call site keeps working untouched. */
 function StreetMap({ nav, arrived }) {
-  const route = "M70 452 L72 364 L210 356 L214 224 L304 218 L306 122";
-  return (
-    <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" className="w-full h-full" style={{ display: "block" }}>
-      <rect width="400" height="500" fill={C.land} />
-      <path d="M300 -20 L440 -20 L440 150 L360 60 Z" fill={C.water} opacity="0.8" />
-      <rect x="14" y="300" width="120" height="120" rx="10" fill={C.park} /><rect x="300" y="380" width="120" height="120" rx="10" fill={C.park} />
-      {BLDGS.map((b, i) => <rect key={i} x={b[0]} y={b[1]} width={b[2]} height={b[3]} rx="3" fill={C.bldg} />)}
-      <g stroke={C.casing} strokeLinecap="round" fill="none"><path d="M-20 130 H420" strokeWidth="17" /><path d="M-20 220 H420" strokeWidth="13" /><path d="M-20 300 H420" strokeWidth="13" /><path d="M-20 360 H420" strokeWidth="17" /><path d="M-20 440 H420" strokeWidth="13" /><path d="M72 -20 V520" strokeWidth="17" /><path d="M150 -20 V520" strokeWidth="11" /><path d="M230 -20 V520" strokeWidth="11" /><path d="M306 -20 V520" strokeWidth="17" /></g>
-      <g stroke={C.road} strokeLinecap="round" fill="none"><path d="M-20 130 H420" strokeWidth="12" /><path d="M-20 220 H420" strokeWidth="8" /><path d="M-20 300 H420" strokeWidth="8" /><path d="M-20 360 H420" strokeWidth="12" /><path d="M-20 440 H420" strokeWidth="8" /><path d="M72 -20 V520" strokeWidth="12" /><path d="M150 -20 V520" strokeWidth="6" /><path d="M230 -20 V520" strokeWidth="6" /><path d="M306 -20 V520" strokeWidth="12" /></g>
-      {nav && (<>
-        <path id="troute" d={route} fill="none" stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={route} fill="none" stroke={C.blue} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="70" cy="452" r="16" fill={C.blue} opacity="0.2"><animate attributeName="r" values="12;26;12" dur="2.4s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.28;0;0.28" dur="2.4s" repeatCount="indefinite" /></circle>
-        <circle cx="70" cy="452" r="8" fill={C.blue} stroke="#fff" strokeWidth="3" />
-        {arrived ? (<g transform="translate(306 122)"><circle r="12" fill={C.green} stroke="#fff" strokeWidth="3" /><path d="M-5 0 L-1 4 L5 -4" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></g>)
-          : (<g><path d="M306 104 c-9 0 -15 7 -15 15 c0 11 15 25 15 25 s15 -14 15 -25 c0 -8 -6 -15 -15 -15 z" fill={C.red} stroke="#fff" strokeWidth="2" /><circle cx="306" cy="119" r="5" fill="#fff" /></g>)}
-        {!arrived && (<g><circle r="11" fill={C.blue} stroke="#fff" strokeWidth="3" /><path d="M0 -5 L4.5 5 L0 2 L-4.5 5 Z" fill="#fff" /><animateMotion dur="5s" repeatCount="indefinite" rotate="auto"><mpath href="#troute" xlinkHref="#troute" /></animateMotion></g>)}
-      </>)}
-    </svg>
-  );
+  return <LiveMap nav={nav} arrived={arrived} />;
 }
 const Stars = ({ n, size = 14 }) => <span className="inline-flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} size={size} color={i <= n ? C.gold : C.line} fill={i <= n ? C.gold : C.line} />)}</span>;
 const STEPS = ["Confirming", "On the way", "Arriving", "Arrived"];
@@ -146,9 +136,8 @@ export default function App() {
   const saveRating = (rating, review) => { setTrips((x) => x.map((t) => t.id === cur.id ? { ...t, rating, review } : t)); setTab("activity"); go("main"); };
 
   return (
-    <div className="w-full flex justify-center" style={{ background: "#1A1A1A", fontFamily: F }}>
+    <div className="w-full flex justify-center min-h-dvh items-center" style={{ background: "#0E1726", fontFamily: F }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes scrIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
         @keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:translateY(0);opacity:1}}
         @keyframes bub{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -161,7 +150,8 @@ export default function App() {
         .row{animation:rowIn .4s cubic-bezier(.22,.7,.25,1) both}.bub{animation:bub .3s cubic-bezier(.22,.7,.25,1) both}.fadeUp{animation:fadeUp .5s cubic-bezier(.22,.7,.25,1) both}
         *{-webkit-tap-highlight-color:transparent} button{font-family:inherit}
       `}</style>
-      <div className="w-full relative" style={{ maxWidth: 412, height: 860, background: C.sheet, overflow: "hidden" }}>
+      {/* True fullscreen on phones; framed device showcase on desktop. */}
+      <div className="w-full relative" style={{ maxWidth: 412, height: "min(100dvh, 860px)", background: C.sheet, overflow: "hidden" }}>
         <div key={role + screen + tab} className="scr w-full h-full">{role === "pro" ? (proSetup ? (proEditing ? <ProOnboarding initial={proSetup} editing onDone={(su) => { setProSetup(su); setProEditing(false); }} onCancel={() => setProEditing(false)} /> : <ProApp profile={profile} setup={proSetup} onEditSetup={() => setProEditing(true)} onSaveProfile={setProfile} onExit={() => setRole("customer")} />) : <ProOnboarding onDone={(su) => setProSetup(su)} onCancel={() => setRole("customer")} />) : <>
           {screen === "welcome" && <Welcome onAuth={(m) => { setAuthMode(m); go("auth"); }} onGuest={home} />}
           {screen === "auth" && <Auth mode={authMode} onBack={() => go("welcome")} onDone={home} />}
@@ -298,17 +288,21 @@ function Welcome({ onAuth, onGuest }) {
 /* ---------- SERVICES TAB ---------- */
 function ServicesTab({ onPick }) {
   return (
-    <div style={{ background: C.sheet }}>
-      <div className="px-5 pt-12 pb-3"><div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Good afternoon</div><div style={{ color: C.sub, fontSize: 15, marginTop: 2 }}>What needs fixing today?</div></div>
-      <div className="px-5"><div className="flex items-center gap-3 rounded-2xl px-4" style={{ background: C.sel, height: 52 }}><Search size={19} /><input placeholder="Describe the problem or pick below" className="bg-transparent outline-none flex-1 text-[15px]" style={{ color: C.ink }} /></div></div>
-      <div className="px-5 mt-6 pb-6">
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.sub, letterSpacing: 0.3 }} className="mb-3">SERVICES</div>
+    <div className="bg-card">
+      <div className="px-5 pb-3 pt-12"><h1 className="text-[26px] font-extrabold tracking-tight">Good afternoon</h1><p className="mt-0.5 text-[15px] text-muted-foreground">What needs fixing today?</p></div>
+      <div className="px-5"><div className="flex h-[52px] items-center gap-3 rounded-md bg-secondary px-4"><Search size={19} className="text-muted-foreground" /><input placeholder="Describe the problem or pick below" className="flex-1 bg-transparent text-[15px] text-foreground outline-none" /></div></div>
+      <div className="mt-6 px-5 pb-6">
+        <div className="mb-3 text-[13px] font-bold uppercase tracking-wide text-muted-foreground">Services</div>
         <div className="grid grid-cols-2 gap-3">
           {TRADES.map((t, i) => { const Icon = t.icon; return (
-            <button key={t.id} onClick={() => onPick(t)} className="row text-left rounded-2xl p-4 transition active:scale-[.97]" style={{ border: `1px solid ${C.line}`, animationDelay: `${i * 30}ms`, background: C.sheet }}>
-              <div className="flex items-center justify-between"><div className="rounded-xl flex items-center justify-center" style={{ background: C.sel, width: 44, height: 44 }}><Icon size={21} color={C.ink} /></div>
-                {t.licReq ? <span className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ background: "#E7F6EE" }}><Shield size={11} color={C.green} /><span style={{ fontSize: 10, fontWeight: 700, color: C.green }}>Licensed</span></span> : t.tag ? <span className="rounded-full px-2 py-0.5" style={{ background: "#FFF1DD" }}><span style={{ fontSize: 10, fontWeight: 700, color: "#B7791F" }}>{t.tag}</span></span> : null}</div>
-              <div className="mt-4" style={{ fontWeight: 700, fontSize: 16 }}>{t.name}</div><div style={{ color: C.sub, fontSize: 13, marginTop: 1 }}>{t.open ? "Name your price" : `from $${Math.round(t.licReq ? t.rate : t.rate * 0.7)}/${t.unit}`}</div>
+            <button key={t.id} onClick={() => onPick(t)} className="row rounded-lg border border-border bg-card p-4 text-left shadow-card transition active:scale-[.97]" style={{ animationDelay: `${i * 30}ms` }}>
+              <div className="flex items-center justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-md bg-secondary"><Icon size={21} className="text-foreground" /></div>
+                {t.licReq ? <span className="flex items-center gap-1 rounded-full bg-trust/10 px-2 py-0.5"><Shield size={11} className="text-trust" /><span className="text-[10px] font-bold text-trust">Licensed</span></span>
+                  : t.tag ? <span className="rounded-full bg-premium/15 px-2 py-0.5 text-[10px] font-bold text-premium-foreground/80" style={{ color: "hsl(var(--status-visit-fee))" }}>{t.tag}</span> : null}
+              </div>
+              <div className="mt-4 text-[16px] font-bold">{t.name}</div>
+              <div className="mt-0.5 text-[13px] text-muted-foreground">{t.open ? "Name your price" : `from $${Math.round(t.licReq ? t.rate : t.rate * 0.7)}/${t.unit}`}</div>
             </button>); })}
         </div>
       </div>
@@ -318,22 +312,45 @@ function ServicesTab({ onPick }) {
 
 /* ---------- ACTIVITY TAB ---------- */
 function ActivityTab({ trips, onOpen }) {
-  const [seg, setSeg] = useState("past");
-  const list = seg === "past" ? trips : [];
+  const [filter, setFilter] = useState("all");
+  const cat = (t) => { const s = toJobStatus(t.status); return (s === "completed" || s === "visit_fee") ? "completed" : s === "cancelled" ? "cancelled" : "active"; };
+  const counts = { active: trips.filter((t) => cat(t) === "active").length, completed: trips.filter((t) => cat(t) === "completed").length };
+  const FILTERS = [["all", "All"], ["active", "In progress"], ["completed", "Completed"]];
+  const list = trips.filter((t) => filter === "all" || cat(t) === filter);
+  const empty = filter === "active"
+    ? { title: "Nothing in progress", body: "Jobs you've booked will appear here while they're underway." }
+    : filter === "completed"
+    ? { title: "No completed trips yet", body: "Finished jobs and their receipts land here." }
+    : { title: "No trips yet", body: "Book a pro and your jobs will show up here." };
   return (
-    <div style={{ background: C.sheet }}>
-      <div className="px-5 pt-12 pb-3"><div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Activity</div></div>
-      <div className="px-5"><div className="rounded-full p-1 flex" style={{ background: C.sel }}>{[["past", "Past"], ["upcoming", "Upcoming"]].map(([v, l]) => <button key={v} onClick={() => setSeg(v)} className="flex-1 rounded-full py-2 text-sm transition" style={{ background: seg === v ? "#fff" : "transparent", fontWeight: 700, boxShadow: seg === v ? "0 1px 4px rgba(0,0,0,.1)" : "none" }}>{l}</button>)}</div></div>
-      <div className="px-5 mt-4 pb-6">
-        {list.length === 0 ? <div className="text-center py-16" style={{ color: C.sub }}><Clock size={34} className="mx-auto mb-3" /><div style={{ fontWeight: 700 }}>No upcoming trips</div><div style={{ fontSize: 13, marginTop: 2 }}>Booked jobs will show up here.</div></div>
-          : list.map((t, i) => { const Icon = tradeById(t.tradeId).icon; return (
-            <button key={t.id} onClick={() => onOpen(t)} className="row w-full flex items-center gap-3 rounded-2xl px-3 py-3 mb-2 transition active:scale-[.98]" style={{ border: `1px solid ${C.line}`, animationDelay: `${i * 45}ms` }}>
-              <div className="rounded-xl flex items-center justify-center" style={{ background: C.sel, width: 46, height: 46 }}><Icon size={21} /></div>
-              <div className="flex-1 text-left"><div style={{ fontWeight: 700, fontSize: 15.5 }}>{tradeById(t.tradeId).name}</div><div style={{ color: C.sub, fontSize: 12.5 }}>{t.problem} · {t.date}</div>
-                <div className="mt-1">{t.status === "Disputed" ? <span className="rounded-full px-2 py-0.5" style={{ background: "#FDECEC", fontSize: 10.5, fontWeight: 700, color: C.red }}>Disputed - under review</span> : t.status === "Awaiting part" ? <span className="rounded-full px-2 py-0.5" style={{ background: "#E8F0FE", fontSize: 10.5, fontWeight: 700, color: C.blue }}>Awaiting part - returns {t.returnDate}</span> : t.rating ? <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.gold, fontWeight: 700 }}><Star size={12} fill={C.gold} color={C.gold} />{t.rating}.0</span> : <span className="rounded-full px-2 py-0.5" style={{ background: "#FFF1DD", fontSize: 10.5, fontWeight: 700, color: "#B7791F" }}>Rate your pro</span>}</div>
+    <div className="bg-card">
+      <div className="px-5 pb-3 pt-12"><h1 className="text-[26px] font-extrabold tracking-tight">Activity</h1></div>
+      <div className="flex gap-2 overflow-x-auto px-5 pb-1">
+        {FILTERS.map(([v, l]) => (
+          <button key={v} onClick={() => setFilter(v)} aria-pressed={filter === v} className={cn("whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-bold transition", filter === v ? "bg-foreground text-background" : "bg-secondary text-muted-foreground")}>
+            {l}{v !== "all" && counts[v] > 0 ? ` · ${counts[v]}` : ""}
+          </button>
+        ))}
+      </div>
+      <div className="mt-4 px-5 pb-6">
+        {list.length === 0 ? (
+          <EmptyState icon={Clock} title={empty.title} body={empty.body} />
+        ) : list.map((t, i) => { const Icon = tradeById(t.tradeId).icon; const done = cat(t) === "completed"; return (
+          <button key={t.id} onClick={() => onOpen(t)} className="row mb-2.5 flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3.5 text-left shadow-card transition active:scale-[.98]" style={{ animationDelay: `${i * 45}ms` }}>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-secondary"><Icon size={21} className="text-foreground" /></span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[15.5px] font-bold">{tradeById(t.tradeId).name}</div>
+              <div className="mt-0.5 truncate text-[12.5px] text-muted-foreground">{t.problem} · {t.date}{t.status === "Awaiting part" && t.returnDate ? ` · returns ${t.returnDate}` : ""}</div>
+              <div className="mt-1.5">
+                {done
+                  ? (t.rating
+                    ? <span className="inline-flex items-center gap-1 text-[12px] font-bold text-premium"><Star size={12} fill="currentColor" />{t.rating}.0</span>
+                    : <span className="rounded-full bg-premium/15 px-2 py-0.5 text-[10.5px] font-bold text-premium">Rate your pro</span>)
+                  : <StatusPill status={t.status} appearance="tint" className="px-2 py-0.5" />}
               </div>
-              <div className="text-right"><div style={{ fontWeight: 800 }}>${t.price}</div><ChevronRight size={16} color={C.sub} className="ml-auto mt-1" /></div>
-            </button>); })}
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1"><Money amount={t.price} size="md" /><ChevronRight size={16} className="text-muted-foreground/60" /></div>
+          </button>); })}
       </div>
     </div>
   );
@@ -344,21 +361,29 @@ function AccountTab({ profile, onNav }) {
   const cards = [["help", "Help", HelpCircle], ["wallet", "Wallet", Wallet], ["activity", "Activity", Clock]];
   const menu = [["pro", "Switch to Pro mode", Wrench], ["reviews", "Your reviews", Star], ["feedback", "Send feedback", MessageSquare], ["editProfile", "Edit profile", Pencil], ["promos", "Promotions", Gift], ["settings", "Settings", Settings], ["signout", "Sign out", LogOut]];
   return (
-    <div style={{ background: C.sheet }}>
-      <div className="px-5 pt-12 pb-2"><div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Account</div></div>
-      <button onClick={() => onNav("editProfile")} className="w-full px-5 py-3 flex items-center gap-3 active:opacity-70 transition">
-        <div className="rounded-full flex items-center justify-center font-bold" style={{ width: 60, height: 60, background: C.ink, color: "#fff", fontSize: 24 }}>{profile.name[0]}</div>
-        <div className="flex-1 text-left"><div style={{ fontWeight: 800, fontSize: 20 }}>{profile.name}</div><div className="flex items-center gap-1" style={{ color: C.sub, fontSize: 13 }}><Star size={13} color={C.gold} fill={C.gold} />{profile.rating} · Customer</div></div>
-        <ChevronRight size={20} color={C.sub} />
+    <div className="bg-card">
+      <div className="px-5 pb-2 pt-12"><h1 className="text-[26px] font-extrabold tracking-tight">Account</h1></div>
+      <button onClick={() => onNav("editProfile")} className="flex w-full items-center gap-3 px-5 py-3 transition active:opacity-70">
+        <span className="grid h-[60px] w-[60px] place-items-center rounded-full bg-foreground text-[24px] font-bold text-background">{profile.name[0]}</span>
+        <span className="flex-1 text-left"><span className="block text-[20px] font-extrabold">{profile.name}</span><span className="mt-0.5 flex items-center gap-1 text-[13px] text-muted-foreground"><Star size={13} className="text-premium" fill="currentColor" />{profile.rating} · Customer</span></span>
+        <ChevronRight size={20} className="text-muted-foreground" />
       </button>
-      <div className="px-5 mt-2 grid grid-cols-3 gap-3">
-        {cards.map(([k, l, Icon]) => <button key={k} onClick={() => onNav(k)} className="rounded-2xl py-4 flex flex-col items-center gap-2 active:scale-95 transition" style={{ background: C.sel }}><Icon size={22} /><span style={{ fontWeight: 700, fontSize: 13 }}>{l}</span></button>)}
+      <div className="mt-2 grid grid-cols-3 gap-3 px-5">
+        {cards.map(([k, l, Icon]) => <button key={k} onClick={() => onNav(k)} className="flex flex-col items-center gap-2 rounded-lg bg-secondary py-4 transition active:scale-95"><Icon size={22} className="text-foreground" /><span className="text-[13px] font-bold">{l}</span></button>)}
       </div>
-      <div className="px-5 mt-5 pb-6">
-        <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.line}` }}>
-          {menu.map(([k, l, Icon], i) => <button key={k} onClick={() => onNav(k)} className="w-full flex items-center gap-3 px-4 py-4 active:bg-neutral-50 transition" style={{ borderTop: i ? `1px solid ${C.line}` : "none", color: k === "signout" ? C.red : C.ink }}><Icon size={20} /><span className="flex-1 text-left" style={{ fontWeight: 600, fontSize: 15 }}>{l}</span>{k !== "signout" && <ChevronRight size={18} color={C.sub} />}</button>)}
+      <div className="mt-5 px-5 pb-6">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
+          {menu.map(([k, l, Icon]) => { const danger = k === "signout"; return (
+            <ListRow
+              key={k}
+              divider
+              onClick={() => onNav(k)}
+              noChevron={danger}
+              leading={<RowIcon className={danger ? "bg-destructive/10 text-destructive" : undefined}><Icon /></RowIcon>}
+              title={danger ? <span className="text-destructive">{l}</span> : l}
+            />); })}
         </div>
-        <div className="text-center mt-6" style={{ color: C.sub, fontSize: 12 }}>Aquilla · v1.0</div>
+        <div className="mt-6 text-center text-[12px] text-muted-foreground">Aquilla · v1.0</div>
       </div>
     </div>
   );
@@ -375,20 +400,23 @@ function Pros({ trade, tier, setTier, onBack, onPick }) {
         <div className="absolute" style={{ left: "44%", top: "26%" }}><div style={{ background: C.ink, color: "#fff", borderRadius: "16px 16px 16px 4px", padding: "6px 8px" }}><Icon size={18} /></div></div>
         <button onClick={onBack} className="absolute left-4 top-12 rounded-full flex items-center justify-center active:scale-90 transition" style={{ width: 42, height: 42, background: "#fff", boxShadow: "0 2px 10px rgba(0,0,0,.14)" }}><ChevronLeft size={22} /></button>
       </div>
-      <div className="sheet absolute left-0 right-0 bottom-0 flex flex-col" style={{ background: C.sheet, borderRadius: "22px 22px 0 0", top: 240, boxShadow: "0 -8px 30px rgba(0,0,0,.12)" }}>
-        <div className="flex justify-center pt-2.5"><div style={{ width: 38, height: 4, borderRadius: 99, background: "#D9D9DD" }} /></div>
-        <div className="px-5 pt-3 pb-2 flex items-center gap-2"><Icon size={20} /><span style={{ fontWeight: 800, fontSize: 19 }}>Choose a {trade.name.toLowerCase()} pro</span></div>
-        {showToggle ? <div className="px-5 pb-1"><div className="rounded-full p-1 flex" style={{ background: C.sel }}>{[["licensed", "Licensed Pro"], ["quick", "Quick Help"]].map(([v, l]) => <button key={v} onClick={() => setTier(v)} className="flex-1 rounded-full py-2 text-sm transition" style={{ background: tier === v ? "#fff" : "transparent", fontWeight: 700, boxShadow: tier === v ? "0 1px 4px rgba(0,0,0,.1)" : "none" }}>{l}</button>)}</div></div>
-          : <div className="px-5 pb-1"><div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "#E7F6EE" }}><Shield size={15} color={C.green} /><span style={{ fontSize: 12.5, color: "#0B7A4D", fontWeight: 600 }}>{trade.solo ? "Vetted, insured & available 24/7." : `License-verified & insured — required for ${trade.name.toLowerCase()}.`}</span></div></div>}
+      <div className="sheet absolute left-0 right-0 bottom-0 flex flex-col rounded-t-xl bg-card shadow-sheet" style={{ top: 240 }}>
+        <div className="flex justify-center pt-2.5"><div className="h-1 w-10 rounded-full bg-border" /></div>
+        <div className="flex items-center gap-2 px-5 pb-2 pt-3"><Icon size={20} /><span className="text-[19px] font-extrabold">Choose a {trade.name.toLowerCase()} pro</span></div>
+        {showToggle ? <div className="px-5 pb-1"><div className="flex rounded-full bg-secondary p-1">{[["licensed", "Licensed Pro"], ["quick", "Quick Help"]].map(([v, l]) => <button key={v} onClick={() => setTier(v)} aria-pressed={tier === v} className={cn("flex-1 rounded-full py-2 text-sm font-bold transition", tier === v ? "bg-card text-foreground shadow-card" : "text-muted-foreground")}>{l}</button>)}</div></div>
+          : <div className="px-5 pb-1"><div className="flex items-center gap-2 rounded-md bg-trust/10 px-3 py-2"><Shield size={15} className="text-trust" /><span className="text-[12.5px] font-semibold text-status-completed">{trade.solo ? "Vetted, insured & available 24/7." : `License-verified & insured — required for ${trade.name.toLowerCase()}.`}</span></div></div>}
         <div className="flex-1 overflow-auto px-3 pt-2" style={{ paddingBottom: 96 }}>
           {pros.map((p, i) => { const active = sel === p.id; return (
-            <button key={p.id} onClick={() => setSel(p.id)} className="row w-full flex items-center gap-3 rounded-2xl px-3 py-3 mb-1 transition" style={{ background: active ? C.sel : "transparent", border: `1.5px solid ${active ? C.ink : "transparent"}`, animationDelay: `${i * 45}ms` }}>
-              <div className="rounded-full flex items-center justify-center font-bold" style={{ width: 46, height: 46, background: "#E9E9EC", fontSize: 17 }}>{p.name[0]}</div>
-              <div className="flex-1 text-left"><div className="flex items-center gap-1.5" style={{ fontWeight: 700, fontSize: 15.5 }}>{p.name}{p.licensed && <Shield size={13} color={C.green} />}</div><div className="flex items-center gap-1.5" style={{ color: C.sub, fontSize: 12.5 }}><Star size={12} color={C.ink} fill={C.ink} />{p.rating}<span>·</span>{Math.round(p.success * 100)}% completed<span>·</span>{p.eta} min</div></div>
-              <div className="text-right"><div style={{ fontWeight: 800, fontSize: 16 }}>${p.rate}</div><div style={{ color: C.sub, fontSize: 11 }}>/{trade.unit}</div></div>
+            <button key={p.id} onClick={() => setSel(p.id)} aria-pressed={active} className={cn("row mb-1 flex w-full items-center gap-3 rounded-md border-[1.5px] px-3 py-3 text-left transition", active ? "border-primary bg-accent" : "border-transparent")} style={{ animationDelay: `${i * 45}ms` }}>
+              <span className="grid h-[46px] w-[46px] place-items-center rounded-full bg-secondary text-[17px] font-bold">{p.name[0]}</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 text-[15.5px] font-bold">{p.name}{p.licensed && <Shield size={13} className="text-trust" />}</div>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-muted-foreground"><Star size={12} className="text-premium" fill="currentColor" />{p.rating}<span>·</span>{Math.round(p.success * 100)}% completed<span>·</span>{p.eta} min</div>
+              </div>
+              <div className="text-right"><Money amount={p.rate} size="md" /><div className="text-[11px] text-muted-foreground">/{trade.unit}</div></div>
             </button>); })}
         </div>
-        <div className="absolute left-0 right-0 bottom-0 px-5 pb-6 pt-3" style={{ background: "linear-gradient(to top,#fff 70%,transparent)" }}><button onClick={() => onPick(selected)} className="w-full rounded-2xl flex items-center justify-center gap-2 active:scale-[.98] transition" style={{ background: C.ink, color: "#fff", height: 54, fontWeight: 700, fontSize: 16 }}><Send size={17} /> Message {selected.name.split(" ")[0]}</button></div>
+        <div className="absolute inset-x-0 bottom-0 px-5 pb-6 pt-3" style={{ background: "linear-gradient(to top, hsl(var(--card)) 70%, transparent)" }}><Button size="lg" onClick={() => onPick(selected)} className="w-full"><Send size={17} /> Message {selected.name.split(" ")[0]}</Button></div>
       </div>
     </div>
   );
@@ -432,19 +460,26 @@ function Chat({ trade, pro, openJob, jobText, budget, onBack, onAccept }) {
 
 /* ---------- PAY ---------- */
 function Pay({ trade, pro, quote, onBack, onConfirm }) {
-  const { fee, payout } = split(quote.price); const total = quote.price.toFixed(2);
+  const { fee, payout } = split(quote.price);
   return (
-    <div className="h-full flex flex-col" style={{ background: C.sheet }}>
-      <div className="flex items-center gap-3 px-4 pt-12 pb-3"><button onClick={onBack} className="active:scale-90 transition"><ChevronLeft size={24} /></button><span style={{ fontWeight: 800, fontSize: 19 }}>Confirm & pay</span></div>
-      <div className="px-5 flex-1 overflow-auto">
-        <div className="flex items-center gap-3 rounded-2xl p-4 mt-2" style={{ background: C.sel }}><div className="rounded-full flex items-center justify-center font-bold" style={{ width: 48, height: 48, background: "#fff" }}>{pro.name[0]}</div><div className="flex-1"><div className="flex items-center gap-1.5" style={{ fontWeight: 700 }}>{pro.name}{pro.licensed && <Shield size={13} color={C.green} />}</div><div style={{ color: C.sub, fontSize: 13 }}>{trade.name} · {pro.eta} min away</div></div><Clock size={18} color={C.sub} /></div>
-        <div className="mt-5" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>PRICE</div>
-        <div className="mt-2" style={{ borderTop: `1px solid ${C.line}` }}><div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Price set by {pro.name.split(" ")[0]}</span><span style={{ fontWeight: 600 }}>${quote.price.toFixed(2)}</span></div><div className="flex justify-between py-3"><span style={{ fontWeight: 800, fontSize: 16 }}>You pay</span><span style={{ fontWeight: 800, fontSize: 16 }}>${total}</span></div></div>
-        <div className="rounded-2xl p-4 mt-2" style={{ background: C.sel }}><div style={{ fontSize: 12, fontWeight: 700, color: C.sub }} className="mb-2">HOW THIS SPLITS</div><div className="flex justify-between py-1"><span style={{ fontSize: 14, color: C.sub }}>Pro receives</span><span style={{ fontWeight: 700 }}>${payout.toFixed(2)}</span></div><div className="flex justify-between py-1"><span style={{ fontSize: 14, color: C.sub }}>Aquilla service fee (15%)</span><span style={{ fontWeight: 700, color: C.green }}>${fee.toFixed(2)}</span></div></div>
-        <div className="mt-3 flex items-center gap-3 rounded-2xl p-4" style={{ border: `1px solid ${C.line}` }}><CreditCard size={20} /><span className="flex-1" style={{ fontWeight: 600 }}>Visa •••• 4242</span><ChevronRight size={18} color={C.sub} /></div>
-        <div className="flex items-start gap-2 mt-3 px-1" style={{ color: C.sub, fontSize: 12.5, lineHeight: 1.4 }}><Shield size={14} color={C.green} style={{ marginTop: 1, flexShrink: 0 }} /><span>You're only charged once the job is marked complete. A $20 visit fee applies only if it can't be completed - and is credited toward the repair if you proceed.</span></div>
+    <div className="flex h-full flex-col bg-card">
+      <div className="flex items-center gap-3 px-4 pb-3 pt-12"><button onClick={onBack} className="transition active:scale-90"><ChevronLeft size={24} /></button><span className="text-[19px] font-extrabold">Confirm & pay</span></div>
+      <div className="flex-1 overflow-auto px-5">
+        <div className="mt-2 flex items-center gap-3 rounded-lg bg-secondary p-4"><span className="grid h-12 w-12 place-items-center rounded-full bg-card text-[17px] font-bold">{pro.name[0]}</span><div className="flex-1"><div className="flex items-center gap-1.5 font-bold">{pro.name}{pro.licensed && <Shield size={13} className="text-trust" />}</div><div className="text-[13px] text-muted-foreground">{trade.name} · {pro.eta} min away</div></div><Clock size={18} className="text-muted-foreground" /></div>
+        <div className="mt-5 text-[13px] font-bold uppercase tracking-wide text-muted-foreground">Price</div>
+        <div className="mt-2 border-t border-border">
+          <div className="flex items-center justify-between border-b border-border py-3"><span className="text-[14.5px] text-muted-foreground">Price set by {pro.name.split(" ")[0]}</span><Money amount={quote.price} size="sm" /></div>
+          <div className="flex items-center justify-between py-3"><span className="text-[16px] font-extrabold">You pay</span><Money amount={quote.price} size="lg" /></div>
+        </div>
+        <div className="mt-2 rounded-lg bg-secondary p-4">
+          <div className="mb-2 text-[12px] font-bold uppercase tracking-wide text-muted-foreground">How this splits</div>
+          <div className="flex items-center justify-between py-1"><span className="text-[14px] text-muted-foreground">Pro receives</span><Money amount={payout} size="sm" /></div>
+          <div className="flex items-center justify-between py-1"><span className="text-[14px] text-muted-foreground">Aquilla service fee (15%)</span><Money amount={fee} size="sm" className="text-trust" /></div>
+        </div>
+        <div className="mt-2 flex items-center gap-3 rounded-lg border border-border p-4"><CreditCard size={20} /><span className="flex-1 font-semibold">Visa •••• 4242</span><ChevronRight size={18} className="text-muted-foreground" /></div>
+        <div className="mt-3 flex items-start gap-2 px-1 text-[12.5px] leading-relaxed text-muted-foreground"><Shield size={14} className="mt-0.5 shrink-0 text-trust" /><span>You're only charged once the job is marked complete. A $20 visit fee applies only if it can't be completed — and is credited toward the repair if you proceed.</span></div>
       </div>
-      <div className="px-5 pb-6 pt-3"><button onClick={onConfirm} className="w-full rounded-2xl active:scale-[.98] transition" style={{ background: C.ink, color: "#fff", height: 54, fontWeight: 700, fontSize: 16 }}>Confirm {pro.name.split(" ")[0]} · ${total}</button></div>
+      <div className="px-5 pb-6 pt-3"><Button size="lg" onClick={onConfirm} className="w-full">Confirm {pro.name.split(" ")[0]} · <Money amount={quote.price} size="md" className="text-primary-foreground" /></Button></div>
     </div>
   );
 }
@@ -453,28 +488,32 @@ function Pay({ trade, pro, quote, onBack, onConfirm }) {
 function Dispatch({ trade, pro, step, eta, rate, visitBlocked, onMessage, onComplete, onVisitOnly, onNeedsPart, onCancel }) {
   const arrived = step === 3; const arrive = new Date(Date.now() + eta * 60000); const hh = arrive.getHours() % 12 || 12; const mm = String(arrive.getMinutes()).padStart(2, "0");
   return (
-    <div className="h-full relative" style={{ background: C.bg }}>
+    <div className="relative h-full bg-background">
       <div className="absolute inset-0"><StreetMap nav arrived={arrived} /></div>
-      <div className="absolute left-4 right-4 top-12 rounded-2xl flex items-center gap-3 px-4 py-3 fadeUp" style={{ background: "#fff", boxShadow: "0 4px 18px rgba(0,0,0,.16)" }}><div className="rounded-full flex items-center justify-center" style={{ width: 36, height: 36, background: arrived ? "#E7F6EE" : "#E8F0FE" }}>{arrived ? <Check size={18} color={C.green} /> : <Navigation size={16} color={C.blue} fill={C.blue} />}</div><div className="flex-1"><div style={{ fontWeight: 700, fontSize: 14.5 }}>{arrived ? "Arrived at your location" : `${eta} min \u00b7 arriving ${hh}:${mm}`}</div><div style={{ color: C.sub, fontSize: 12 }}>142 Maple Ave</div></div></div>
-      <div className="sheet absolute left-0 right-0 bottom-0" style={{ background: C.sheet, borderRadius: "22px 22px 0 0", boxShadow: "0 -8px 30px rgba(0,0,0,.14)" }}>
-        <div className="flex justify-center pt-2.5"><div style={{ width: 38, height: 4, borderRadius: 99, background: "#D9D9DD" }} /></div>
-        <div className="px-5 pt-3"><div className="flex items-center justify-between"><span style={{ fontWeight: 800, fontSize: 20, color: arrived ? C.green : C.ink }}>{arrived ? "Your pro has arrived" : step === 0 ? "Confirming your pro\u2026" : `${pro.name.split(" ")[0]} is on the way`}</span>{!arrived && step >= 1 && <span style={{ fontWeight: 800, fontSize: 18 }}>{eta}<span style={{ fontSize: 13, color: C.sub, fontWeight: 600 }}> min</span></span>}</div>
-          <div className="flex gap-1.5 mt-3">{STEPS.map((_, i) => <div key={i} className="h-1 flex-1 rounded-full" style={{ background: i <= step ? C.ink : C.line, transition: "background .4s" }} />)}</div>
-          <div className="flex items-center gap-3 rounded-2xl p-3 mt-4" style={{ background: C.sel }}><div className="rounded-full flex items-center justify-center font-bold" style={{ width: 50, height: 50, background: "#fff", fontSize: 18 }}>{pro.name[0]}</div><div className="flex-1"><div className="flex items-center gap-1.5" style={{ fontWeight: 700 }}>{pro.name}{pro.licensed && <Shield size={13} color={C.green} />}</div><div style={{ color: C.sub, fontSize: 13 }}>\u2b50 {pro.rating} \u00b7 {Math.round(rate * 100)}% completion</div></div><button onClick={onMessage} className="rounded-full flex items-center justify-center active:scale-90 transition" style={{ width: 44, height: 44, background: "#fff" }}><Send size={17} /></button><button className="rounded-full flex items-center justify-center" style={{ width: 44, height: 44, background: C.green, color: "#fff" }}><Phone size={17} /></button></div>
+      <div className="fadeUp absolute inset-x-4 top-12 flex items-center gap-3 rounded-md bg-card px-4 py-3 shadow-float"><div className={cn("flex h-9 w-9 items-center justify-center rounded-full", arrived ? "bg-status-arrived/15" : "bg-status-en-route/15")}>{arrived ? <Check size={18} className="text-status-arrived" /> : <Navigation size={16} className="text-status-en-route" fill="currentColor" />}</div><div className="flex-1"><div className="tnum text-[14.5px] font-bold">{arrived ? "Arrived at your location" : `${eta} min \u00b7 arriving ${hh}:${mm}`}</div><div className="text-[12px] text-muted-foreground">142 Maple Ave</div></div></div>
+      <div className="sheet absolute inset-x-0 bottom-0 rounded-t-xl bg-card shadow-sheet">
+        <div className="flex justify-center pt-2.5"><div className="h-1 w-10 rounded-full bg-border" /></div>
+        <div className="px-5 pt-3">
+          <div className="flex items-center justify-between">
+            <span className={cn("text-[20px] font-extrabold", arrived && "text-status-arrived")}>{arrived ? "Your pro has arrived" : step === 0 ? "Confirming your pro\u2026" : `${pro.name.split(" ")[0]} is on the way`}</span>
+            <StatusPill status={arrived ? "arrived" : step === 0 ? "requested" : "en_route"} appearance="tint" />
+          </div>
+          <div className="mt-3 flex gap-1.5">{STEPS.map((_, i) => <div key={i} className={cn("h-1.5 flex-1 rounded-full transition-colors duration-300", i <= step ? "bg-primary" : "bg-border")} />)}</div>
+          <div className="mt-4 flex items-center gap-3 rounded-md bg-secondary p-3"><span className="grid h-[50px] w-[50px] place-items-center rounded-full bg-card text-[18px] font-bold">{pro.name[0]}</span><div className="flex-1"><div className="flex items-center gap-1.5 font-bold">{pro.name}{pro.licensed && <Shield size={13} className="text-trust" />}</div><div className="flex items-center gap-1 text-[13px] text-muted-foreground"><Star size={12} className="text-premium" fill="currentColor" /> {pro.rating} \u00b7 {Math.round(rate * 100)}% completion</div></div><button onClick={onMessage} aria-label="Message pro" className="grid h-11 w-11 place-items-center rounded-full bg-card transition active:scale-90"><Send size={17} /></button><button aria-label="Call pro" className="grid h-11 w-11 place-items-center rounded-full bg-trust text-trust-foreground"><Phone size={17} /></button></div>
         </div>
         <div className="px-5 pb-7 pt-4">
           {arrived ? (
             <div className="flex flex-col gap-2.5">
-              <button onClick={onComplete} className="w-full rounded-2xl active:scale-[.98] transition" style={{ background: C.green, color: "#fff", height: 52, fontWeight: 700, fontSize: 16 }}>Job completed</button>
-              <button onClick={onNeedsPart} className="w-full rounded-2xl active:scale-[.98] transition" style={{ background: C.sel, color: C.ink, height: 50, fontWeight: 700, fontSize: 15 }}>Needs a part \u2014 schedule return</button>
+              <Button variant="trust" size="lg" onClick={onComplete} className="w-full">Job completed</Button>
+              <Button variant="secondary" onClick={onNeedsPart} className="w-full">Needs a part \u2014 schedule return</Button>
               {visitBlocked ? (
-                <div className="rounded-2xl px-3 py-3 flex items-start gap-2" style={{ background: "#FDECEC", border: `1px solid rgba(234,67,53,.3)` }}><AlertTriangle size={16} color={C.red} style={{ marginTop: 1, flexShrink: 0 }} /><span style={{ fontSize: 12.5, color: "#B42318", lineHeight: 1.4 }}>Visit fee paused \u2014 this pro's completion rate is below 50%. Their account is under review and they can't charge for incomplete jobs.</span></div>
+                <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-3"><AlertTriangle size={16} className="mt-0.5 shrink-0 text-destructive" /><span className="text-[12.5px] leading-relaxed text-destructive">Visit fee paused \u2014 this pro's completion rate is below 50%. Their account is under review and they can't charge for incomplete jobs.</span></div>
               ) : (
-                <button onClick={onVisitOnly} className="w-full rounded-2xl active:scale-[.98] transition" style={{ border: `1.5px solid ${C.line}`, color: C.sub, height: 48, fontWeight: 700, fontSize: 14 }}>Couldn't be fixed \u2014 charge $20 visit fee</button>
+                <Button variant="outline" onClick={onVisitOnly} className="w-full text-muted-foreground">Couldn't be fixed \u2014 charge $20 visit fee</Button>
               )}
             </div>
           ) : (
-            <button onClick={onCancel} className="w-full rounded-2xl flex items-center justify-center gap-2 active:scale-[.98] transition" style={{ border: `1.5px solid ${C.line}`, color: C.sub, height: 50, fontWeight: 700 }}><X size={16} /> Cancel</button>
+            <Button variant="outline" onClick={onCancel} className="w-full text-muted-foreground"><X size={16} /> Cancel</Button>
           )}
         </div>
       </div>
@@ -513,20 +552,20 @@ function TripDetail({ trip, onBack, onRate, onHelp, onCompleteReturn, onMessage,
     <div className="h-full flex flex-col" style={{ background: C.sheet }}>
       <div className="flex items-center gap-3 px-4 pt-12 pb-3"><button onClick={onBack} className="active:scale-90 transition"><ChevronLeft size={24} /></button><span style={{ fontWeight: 800, fontSize: 19 }}>Trip details</span></div>
       <div className="flex-1 overflow-auto px-5">
-        <div className="relative rounded-2xl overflow-hidden mt-2" style={{ height: 130 }}><StreetMap /></div>
-        <div className="flex items-center gap-3 mt-4"><div className="rounded-xl flex items-center justify-center" style={{ background: C.sel, width: 48, height: 48 }}><Icon size={22} /></div><div className="flex-1"><div style={{ fontWeight: 800, fontSize: 18 }}>{td.name}</div><div style={{ color: C.sub, fontSize: 13 }}>{trip.problem} \u00b7 {trip.date}</div></div><span className="rounded-full px-2.5 py-1" style={{ background: disputed ? "#FDECEC" : awaiting ? "#E8F0FE" : "#E7F6EE", color: disputed ? C.red : awaiting ? C.blue : C.green, fontSize: 11, fontWeight: 700 }}>{trip.status}</span></div>
-        {disputed && <div className="rounded-2xl p-3 mt-3 flex gap-2.5" style={{ background: "#FDECEC" }}><AlertTriangle size={18} color={C.red} style={{ marginTop: 1, flexShrink: 0 }} /><div><div style={{ fontWeight: 700, fontSize: 14, color: "#B42318" }}>Disputed \u2014 under review</div><div style={{ color: "#B42318", fontSize: 12.5, marginTop: 1, lineHeight: 1.4 }}>The client and pro disagreed on completion. Payment is held until Aquilla reviews it.</div></div></div>}
-        {awaiting && <div className="rounded-2xl p-3 mt-3 flex gap-2.5" style={{ background: "#E8F0FE" }}><Clock size={18} color={C.blue} style={{ marginTop: 1, flexShrink: 0 }} /><div><div style={{ fontWeight: 700, fontSize: 14, color: "#174EA6" }}>Returns {trip.returnDate}</div>{trip.partNote ? <div style={{ color: "#3B6FBF", fontSize: 12.5, marginTop: 1 }}>{trip.partNote}</div> : null}</div></div>}
+        <div className="relative rounded-lg overflow-hidden mt-2" style={{ height: 130 }}><StreetMap /></div>
+        <div className="flex items-center gap-3 mt-4"><div className="rounded-md flex items-center justify-center shrink-0" style={{ background: C.sel, width: 48, height: 48 }}><Icon size={22} color={C.ink} /></div><div className="flex-1 min-w-0"><div className="truncate" style={{ fontWeight: 800, fontSize: 18 }}>{td.name}</div><div className="truncate" style={{ color: C.sub, fontSize: 13 }}>{trip.problem} \u00b7 {trip.date}</div></div><StatusPill status={trip.status} appearance="tint" /></div>
+        {disputed && <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3.5"><div className="flex gap-2.5"><Lock size={18} className="mt-0.5 shrink-0 text-destructive" /><div><div className="text-[14px] font-bold text-destructive">Disputed \u2014 funds held</div><div className="mt-0.5 text-[12.5px] leading-snug text-destructive/90">The customer and pro disagreed on completion. Aquilla is reviewing; no money moves until it's resolved.</div></div></div><div className="mt-3 flex items-center justify-between border-t border-destructive/20 pt-3"><span className="text-[12.5px] font-semibold text-destructive/90">Held in escrow</span><Money amount={trip.price} size="md" className="text-destructive" /></div></div>}
+        {awaiting && <div className="mt-3 flex gap-2.5 rounded-lg bg-status-awaiting-part/10 p-3.5"><Clock size={18} className="mt-0.5 shrink-0 text-status-awaiting-part" /><div><div className="text-[14px] font-bold text-status-awaiting-part">Returns {trip.returnDate}</div>{trip.partNote ? <div className="mt-0.5 text-[12.5px] text-status-awaiting-part/90">{trip.partNote}</div> : null}</div></div>}
         <div className="flex items-center gap-3 rounded-2xl p-3 mt-4" style={{ background: C.sel }}><div className="rounded-full flex items-center justify-center font-bold" style={{ width: 44, height: 44, background: "#fff" }}>{trip.proName[0]}</div><div className="flex-1"><div className="flex items-center gap-1.5" style={{ fontWeight: 700 }}>{trip.proName}{trip.proLicensed && <Shield size={13} color={C.green} />}</div><div style={{ color: C.sub, fontSize: 12.5 }}>Your pro</div></div><button onClick={onMessage} className="rounded-full flex items-center justify-center active:scale-90 transition" style={{ width: 42, height: 42, background: "#fff" }}><Send size={16} /></button></div>
         <div className="mt-5" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>{awaiting ? "ESTIMATE" : "RECEIPT"}</div>
         <div className="mt-2" style={{ borderTop: `1px solid ${C.line}` }}>
           {sj ? (<>
-            <div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Parts{awaiting ? " (deposit paid)" : ""}</span><span style={{ fontWeight: 600 }}>${trip.parts.toFixed(2)}</span></div>
-            <div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Labor{awaiting ? " (on completion)" : ""}</span><span style={{ fontWeight: 600 }}>${trip.labor.toFixed(2)}</span></div>
-            <div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Aquilla fee (15% labor / 5% parts)</span><span style={{ fontWeight: 600 }}>${fee.toFixed(2)}</span></div>
-            <div className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>Pro payout</span><span style={{ fontWeight: 600 }}>${payout.toFixed(2)}</span></div>
-          </>) : ([["Pro payout", `$${payout.toFixed(2)}`], ["Aquilla service fee (15%)", `$${fee.toFixed(2)}`]].map(([k, v]) => <div key={k} className="flex justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14.5 }}>{k}</span><span style={{ fontWeight: 600 }}>{v}</span></div>))}
-          <div className="flex justify-between py-3"><span style={{ fontWeight: 800 }}>{awaiting ? "Total on completion" : "Total paid"}</span><span style={{ fontWeight: 800 }}>${trip.price.toFixed(2)}</span></div>
+            <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">Parts{awaiting ? " (deposit paid)" : ""}</span><Money amount={trip.parts} size="sm" /></div>
+            <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">Labor{awaiting ? " (on completion)" : ""}</span><Money amount={trip.labor} size="sm" /></div>
+            <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">Aquilla fee (15% labor / 5% parts)</span><Money amount={fee} size="sm" /></div>
+            <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">Pro payout</span><Money amount={payout} size="sm" /></div>
+          </>) : ([["Pro payout", payout], ["Aquilla service fee (15%)", fee]].map(([k, v]) => <div key={k} className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${C.line}` }}><span className="text-[14.5px] text-muted-foreground">{k}</span><Money amount={v} size="sm" /></div>))}
+          <div className="flex items-center justify-between py-3"><span className="text-[15px] font-extrabold">{awaiting ? "Total on completion" : "Total paid"}</span><Money amount={trip.price} size="lg" /></div>
         </div>
         {!awaiting && !disputed && (trip.rating ? <div className="rounded-2xl p-4 mt-3" style={{ border: `1px solid ${C.line}` }}><div className="flex items-center justify-between"><span style={{ fontWeight: 700 }}>Your rating</span><Stars n={trip.rating} size={16} /></div>{trip.review && <div className="mt-2" style={{ color: C.sub, fontSize: 14 }}>\u201c{trip.review}\u201d</div>}</div>
           : <button onClick={onRate} className="w-full rounded-2xl mt-3 active:scale-[.98] transition" style={{ background: "#FFF1DD", color: "#B7791F", height: 50, fontWeight: 700 }}>Rate your pro</button>)}
@@ -885,6 +924,8 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
   const [requests, setRequests] = useState(SEED_REQS);
   const [active, setActive] = useState(null);
   const [view, setView] = useState("main");
+  const [jobsView, setJobsView] = useState("list"); // list | map
+  const [jobsSort, setJobsSort] = useState("near");  // near | pay
   const [me, setMe] = useState({ done: 2, missed: 0 });
   const [earn, setEarn] = useState(0);
   const [toast, setToast] = useState("");
@@ -892,6 +933,21 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
   useEffect(() => () => tm.current.forEach(clearTimeout), []);
   const jobs = me.done + me.missed; const rate = me.done / jobs; const lowRate = jobs >= MIN_JOBS && rate < 0.5;
   const myReqs = requests.filter((r) => setup.trades.includes(r.tradeId));
+  const sortedReqs = [...myReqs].sort((a, b) =>
+    jobsSort === "pay" ? b.price - a.price : parseFloat(a.dist) - parseFloat(b.dist),
+  );
+  // Place coordinate-less mock requests around the map (deterministic per id),
+  // shaped exactly like real job.lat/lng for a later straight swap.
+  const reqPins = myReqs.map((r) => ({
+    id: String(r.id),
+    at: offsetByMiles(MOCK_CENTER, parseFloat(r.dist), (r.id * 47) % 360),
+    status: "requested",
+    title: tradeById(r.tradeId).name,
+    subtitle: `${r.problem} · ${r.customer} · ${r.dist} mi`,
+    price: r.price,
+    kind: "pro",
+  }));
+  const acceptById = (id) => { const r = myReqs.find((x) => String(x.id) === String(id)); if (r) accept(r); };
   const flash = (m) => { setToast(m); tm.current.push(setTimeout(() => setToast(""), 2600)); };
   const payOf = (p) => +(p - split(p).fee).toFixed(2);
   const finish = (label) => { setActive(null); setView("main"); setTab("jobs"); flash(label); };
@@ -902,7 +958,7 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
   const couldntFix = () => { if (lowRate) return; setEarn((e) => e + 18); setMe((s) => ({ ...s, missed: s.missed + 1 })); finish("Visit fee charged — you earned $18.00"); };
 
   if (view === "thread" && active) return <Thread name={active.customer} status={"Pending · job in progress"} onBack={() => setView("active")} />;
-  if (view === "confirm" && active) return <Confirm proName={profile.name} customerName={active.customer} onBack={() => setView("active")} onResolve={(ok) => { if (ok) complete(); else finish("Disputed \u2014 sent to Aquilla for review"); }} />;
+  if (view === "confirm" && active) return <Confirm proName={profile.name} customerName={active.customer} amount={active.price} onBack={() => setView("active")} onResolve={(ok) => { if (ok) complete(); else finish("Disputed \u2014 sent to Aquilla for review"); }} />;
   if (view === "profile") return <EditProfile profile={profile} onBack={() => setView("main")} onSave={(p) => { onSaveProfile && onSaveProfile(p); setView("main"); }} />;
 
   if (view === "active" && active) {
@@ -962,27 +1018,48 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
               ) : lowRate ? (
                 <div className="rounded-2xl p-4 flex gap-2.5" style={{ background: "#FDECEC", border: `1px solid rgba(234,67,53,.3)` }}><AlertTriangle size={18} color={C.red} className="shrink-0" style={{ marginTop: 1 }} /><div><div style={{ fontWeight: 700, color: "#B42318" }}>New jobs paused</div><div style={{ fontSize: 12.5, color: "#B42318", marginTop: 2, lineHeight: 1.4 }}>Your completion rate dropped below 50%. New requests are paused while Aquilla reviews your account. Completing jobs will restore access.</div></div></div>
               ) : (<>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.sub }} className="mb-3">NEARBY REQUESTS</div>
-                {myReqs.length === 0 ? <div className="text-center py-12" style={{ color: C.sub, fontSize: 14 }}>No requests for your trades right now.</div> : myReqs.map((req) => { const Icon = tradeById(req.tradeId).icon; return (
-                  <div key={req.id} className="rounded-2xl p-4 mb-3" style={{ border: `1px solid ${C.line}` }}>
-                    <div className="flex items-center gap-3"><div className="rounded-xl flex items-center justify-center" style={{ background: C.sel, width: 44, height: 44 }}><Icon size={21} /></div><div className="flex-1"><div style={{ fontWeight: 700, fontSize: 15.5 }}>{tradeById(req.tradeId).name}</div><div style={{ color: C.sub, fontSize: 12.5 }}>{req.problem} · {req.customer} · {req.dist} mi</div></div><div className="text-right"><div style={{ fontWeight: 800 }}>${req.price}</div><div style={{ color: C.green, fontSize: 11, fontWeight: 700 }}>+${payOf(req.price).toFixed(0)}</div></div></div>
-                    <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: `1px solid ${C.line}` }}><button onClick={() => decline(req)} className="flex-1 rounded-xl py-2.5 active:scale-95 transition" style={{ background: C.sel, fontWeight: 700, fontSize: 14 }}>Decline</button><button onClick={() => accept(req)} className="flex-1 rounded-xl py-2.5 active:scale-95 transition" style={{ background: C.ink, color: "#fff", fontWeight: 700, fontSize: 14 }}>Accept</button></div>
+                {/* Feed controls: list/map toggle + sort */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="rounded-full p-0.5 flex" style={{ background: C.sel }}>
+                    {[["list", "List"], ["map", "Map"]].map(([v, l]) => (
+                      <button key={v} onClick={() => setJobsView(v)} className="rounded-full px-4 py-1.5 text-[13px] transition" style={{ background: jobsView === v ? "#fff" : "transparent", fontWeight: 700, color: jobsView === v ? C.ink : C.sub, boxShadow: jobsView === v ? "0 1px 4px rgba(14,23,38,.12)" : "none" }}>{l}</button>
+                    ))}
+                  </div>
+                  <button onClick={() => setJobsSort((s) => s === "near" ? "pay" : "near")} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px]" style={{ background: C.sel, fontWeight: 700, color: C.sub }}>
+                    <LayoutGrid size={13} /> {jobsSort === "near" ? "Nearest" : "Top pay"}
+                  </button>
+                </div>
+
+                {jobsView === "map" ? (
+                  <div className="rounded-2xl overflow-hidden" style={{ height: 460, border: `1px solid ${C.line}` }}>
+                    <MapExperience pins={reqPins} title="Jobs near you" selectLabel="Accept" statusLabel="Open" onSelect={(p) => acceptById(p.id)} />
+                  </div>
+                ) : myReqs.length === 0 ? (
+                  <div className="text-center py-12" style={{ color: C.sub, fontSize: 14 }}>No requests for your trades right now.</div>
+                ) : sortedReqs.map((req, i) => { const Icon = tradeById(req.tradeId).icon; return (
+                  <div key={req.id} className="row rounded-2xl p-4 mb-3 bg-card shadow-card" style={{ animationDelay: `${i * 45}ms` }}>
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-md flex items-center justify-center shrink-0" style={{ background: C.sel, width: 46, height: 46 }}><Icon size={21} color={C.ink} /></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2"><span style={{ fontWeight: 800, fontSize: 15.5, letterSpacing: -0.2 }}>{tradeById(req.tradeId).name}</span><StatusPill status="requested" label="New request" appearance="tint" className="px-2 py-0.5" /></div>
+                        <div className="truncate" style={{ color: C.sub, fontSize: 12.5, marginTop: 2 }}>{req.problem} · {req.customer} · {req.dist} mi away</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <Money amount={req.price} size="lg" />
+                        <div className="flex items-center justify-end gap-1" style={{ marginTop: 2 }}><span style={{ color: C.sub, fontSize: 11, fontWeight: 600 }}>you earn</span><Money amount={payOf(req.price)} size="sm" className="text-status-completed" /></div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
+                      <Button variant="secondary" className="flex-1" onClick={() => decline(req)}>Decline</Button>
+                      <Button className="flex-1" onClick={() => accept(req)}>Accept</Button>
+                    </div>
                   </div>); })}
               </>)}
             </div>
           </div>
         )}
         {tab === "earnings" && (
-          <div className="px-5 pt-12">
-            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Earnings</div>
-            <div className="rounded-2xl p-5 mt-4" style={{ background: C.ink, color: "#fff" }}><div style={{ fontSize: 13, opacity: .7, fontWeight: 600 }}>This session</div><div style={{ fontSize: 38, fontWeight: 800, marginTop: 2 }}>${earn.toFixed(2)}</div></div>
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="rounded-2xl p-4" style={{ background: C.sel }}><div style={{ fontSize: 24, fontWeight: 800 }}>{me.done}</div><div style={{ color: C.sub, fontSize: 13 }}>Jobs completed</div></div>
-              <div className="rounded-2xl p-4" style={{ background: lowRate ? "#FDECEC" : C.sel }}><div style={{ fontSize: 24, fontWeight: 800, color: lowRate ? C.red : C.ink }}>{Math.round(rate * 100)}%</div><div style={{ color: lowRate ? "#B42318" : C.sub, fontSize: 13 }}>Completion rate</div></div>
-            </div>
-            {lowRate && <div className="rounded-2xl p-4 mt-3 flex gap-2.5" style={{ background: "#FDECEC", border: `1px solid rgba(234,67,53,.3)` }}><AlertTriangle size={18} color={C.red} className="shrink-0" style={{ marginTop: 1 }} /><span style={{ fontSize: 12.5, color: "#B42318", lineHeight: 1.4 }}>Your completion rate is below 50%, so new jobs and the visit fee are paused. Complete jobs to restore your account.</span></div>}
-            <div className="mt-4 px-1" style={{ color: C.sub, fontSize: 12.5, lineHeight: 1.4 }}>Payouts arrive instantly after each completed job, minus Aquilla's 15% service fee (5% on parts).</div>
-          </div>
+          <EarningsDashboard liveEarnings={earn} jobsDone={me.done} completionRate={rate} lowRate={lowRate} />
         )}
         {tab === "account" && (
           <div className="px-5 pt-12">
@@ -1035,76 +1112,108 @@ function ProOnboarding({ initial, editing, onDone, onCancel }) {
     : step === 1 ? area.trim().length > 1
     : step === 2 ? (bg && (!needsLicense || (lic.trim() && licState.trim() && insured)))
     : true;
+  // Tell the pro exactly what's missing rather than just disabling the button.
+  const hint = canNext ? null
+    : step === 0 ? "Pick at least one trade to continue"
+    : step === 1 ? "Enter the city or ZIP you work in"
+    : step === 2 ? (needsLicense ? "Add your license number, state, insurance & consent" : "Consent to a background check to continue")
+    : null;
   const back = () => (step === 0 ? onCancel() : setStep(step - 1));
   const next = () => { if (step < 3) setStep(step + 1); else onDone({ trades, exp, area: area.trim(), radius, license: needsLicense ? { number: lic.trim(), state: licState.trim().toUpperCase() } : null, insured }); };
-  const Box = ({ on }) => <div className="rounded-md flex items-center justify-center shrink-0" style={{ width: 22, height: 22, border: `2px solid ${on ? C.ink : "#C9CACE"}`, background: on ? C.ink : "#fff" }}>{on && <Check size={14} color="#fff" strokeWidth={3} />}</div>;
+  const Box = ({ on }) => <div className={cn("flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-sm border-2 transition-colors", on ? "border-primary bg-primary" : "border-muted-foreground/40 bg-card")}>{on && <Check size={14} color="#fff" strokeWidth={3} />}</div>;
+  const chip = (on) => cn("rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95", on ? "bg-primary text-primary-foreground" : "border-[1.5px] border-border bg-card text-foreground");
+  const inputCls = "mt-2 h-[54px] w-full rounded-md bg-secondary px-4 text-[16px] outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  const eyebrow = "text-[13px] font-bold uppercase tracking-wide text-muted-foreground";
 
   return (
-    <div className="h-full flex flex-col" style={{ background: C.sheet }}>
-      <div className="px-4 pt-12 pb-2 flex items-center gap-3"><button onClick={back} className="active:scale-90 transition"><ChevronLeft size={24} /></button><span style={{ fontWeight: 800, fontSize: 18 }}>{editing ? "Edit pro profile" : "Become an Aquilla Pro"}</span></div>
-      <div className="px-5 flex gap-1.5 mb-1">{STEPS.map((_, i) => <div key={i} className="h-1 flex-1 rounded-full" style={{ background: i <= step ? C.ink : C.line, transition: "background .3s" }} />)}</div>
+    <div className="flex h-full flex-col bg-card">
+      <div className="flex items-center gap-3 px-4 pb-2 pt-12">
+        <button onClick={back} className="transition active:scale-90"><ChevronLeft size={24} /></button>
+        <span className="text-[18px] font-extrabold">{editing ? "Edit pro profile" : "Become an Aquilla Pro"}</span>
+      </div>
 
-      <div className="flex-1 overflow-auto px-5 pt-3">
+      {/* Stepper: counter + current label + segmented progress */}
+      <div className="px-5 pt-1">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[12px] font-bold uppercase tracking-wide text-primary">Step {step + 1} of {STEPS.length}</span>
+          <span className="text-[12px] font-semibold text-muted-foreground">{STEPS[step]}</span>
+        </div>
+        <div className="flex gap-1.5">
+          {STEPS.map((_, i) => (
+            <div key={i} className={cn("h-1.5 flex-1 rounded-full transition-colors duration-300", i <= step ? "bg-primary" : "bg-border")} />
+          ))}
+        </div>
+      </div>
+
+      <div key={step} className="animate-fade-up flex-1 overflow-auto px-5 pt-4">
         {step === 0 && (<>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>What services do you offer?</div>
-          <div style={{ color: C.sub, fontSize: 14, marginTop: 4 }}>Pick all that apply — you'll only get matching jobs.</div>
-          <div className="grid grid-cols-2 gap-3 mt-4">
+          <h2 className="text-[22px] font-extrabold tracking-tight">What services do you offer?</h2>
+          <p className="mt-1 text-[14px] text-muted-foreground">Pick all that apply — you'll only get matching jobs.</p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
             {TRADES.filter((t) => !t.open).map((t) => { const Icon = t.icon; const on = trades.includes(t.id); return (
-              <button key={t.id} onClick={() => toggle(t.id)} className="text-left rounded-2xl p-4 transition active:scale-[.97]" style={{ border: `1.5px solid ${on ? C.ink : C.line}`, background: on ? C.sel : "#fff" }}>
-                <div className="flex items-center justify-between"><div className="rounded-xl flex items-center justify-center" style={{ background: "#fff", width: 40, height: 40 }}><Icon size={20} /></div><Box on={on} /></div>
-                <div className="mt-3" style={{ fontWeight: 700, fontSize: 14.5 }}>{t.name}</div>
-                {t.licReq && <div style={{ fontSize: 11, color: C.green, fontWeight: 700, marginTop: 1 }}>License required</div>}
+              <button key={t.id} onClick={() => toggle(t.id)} aria-pressed={on} className={cn("rounded-lg border-[1.5px] p-4 text-left transition active:scale-[.97]", on ? "border-primary bg-accent ring-1 ring-primary" : "border-border bg-card")}>
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-card"><Icon size={20} className={on ? "text-primary" : "text-foreground"} /></div>
+                  <Box on={on} />
+                </div>
+                <div className="mt-3 text-[14.5px] font-bold">{t.name}</div>
+                {t.licReq && <div className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-trust"><Shield size={11} /> License required</div>}
               </button>); })}
           </div>
-          <div className="mt-5" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>EXPERIENCE</div>
-          <div className="flex flex-wrap gap-2 mt-2">{["< 1 yr", "1–3 yrs", "3–5 yrs", "5+ yrs"].map((e) => { const on = exp === e; return <button key={e} onClick={() => setExp(e)} className="rounded-full px-4 py-2 text-sm active:scale-95 transition" style={{ border: `1.5px solid ${on ? C.ink : C.line}`, background: on ? C.ink : "#fff", color: on ? "#fff" : C.ink, fontWeight: 600 }}>{e}</button>; })}</div>
+          <div className={cn("mt-5", eyebrow)}>Experience</div>
+          <div className="mt-2 flex flex-wrap gap-2">{["< 1 yr", "1–3 yrs", "3–5 yrs", "5+ yrs"].map((e) => <button key={e} onClick={() => setExp(e)} className={chip(exp === e)}>{e}</button>)}</div>
         </>)}
 
         {step === 1 && (<>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>Where do you work?</div>
-          <div style={{ color: C.sub, fontSize: 14, marginTop: 4 }}>We'll only send you jobs inside your area.</div>
-          <div className="mt-4" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>CITY OR ZIP</div>
-          <input value={area} onChange={(e) => setArea(e.target.value)} autoFocus placeholder="e.g. Brooklyn, NY or 11201" className="w-full rounded-2xl px-4 mt-2 outline-none text-[16px]" style={{ background: C.sel, height: 54 }} />
-          <div className="mt-5" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>SERVICE RADIUS</div>
-          <div className="flex flex-wrap gap-2 mt-2">{[5, 10, 20, 50].map((m) => { const on = radius === m; return <button key={m} onClick={() => setRadius(m)} className="rounded-full px-4 py-2 text-sm active:scale-95 transition" style={{ border: `1.5px solid ${on ? C.ink : C.line}`, background: on ? C.ink : "#fff", color: on ? "#fff" : C.ink, fontWeight: 600 }}>{m} mi</button>; })}</div>
+          <h2 className="text-[22px] font-extrabold tracking-tight">Where do you work?</h2>
+          <p className="mt-1 text-[14px] text-muted-foreground">We'll only send you jobs inside your area.</p>
+          <div className={cn("mt-4", eyebrow)}>City or ZIP</div>
+          <input value={area} onChange={(e) => setArea(e.target.value)} autoFocus placeholder="e.g. Brooklyn, NY or 11201" className={inputCls} />
+          <div className={cn("mt-5", eyebrow)}>Service radius</div>
+          <div className="mt-2 flex flex-wrap gap-2">{[5, 10, 20, 50].map((m) => <button key={m} onClick={() => setRadius(m)} className={chip(radius === m)}>{m} mi</button>)}</div>
         </>)}
 
         {step === 2 && (<>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>Credentials & trust</div>
+          <h2 className="text-[22px] font-extrabold tracking-tight">Credentials & trust</h2>
           {needsLicense ? (<>
-            <div className="rounded-xl p-3 mt-4 flex gap-2.5" style={{ background: "#E7F6EE" }}><Shield size={16} color={C.green} style={{ marginTop: 1, flexShrink: 0 }} /><span style={{ fontSize: 12.5, color: "#0B7A4D", lineHeight: 1.4 }}>{licensedNames.join(", ")} require a verified license & insurance.</span></div>
-            <div className="mt-4" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>LICENSE NUMBER</div>
-            <input value={lic} onChange={(e) => setLic(e.target.value)} placeholder="License #" className="w-full rounded-2xl px-4 mt-2 outline-none text-[16px]" style={{ background: C.sel, height: 54 }} />
-            <div className="mt-3" style={{ fontSize: 13, fontWeight: 700, color: C.sub }}>ISSUING STATE</div>
-            <input value={licState} onChange={(e) => setLicState(e.target.value)} maxLength={2} placeholder="e.g. NY" className="w-full rounded-2xl px-4 mt-2 outline-none text-[16px]" style={{ background: C.sel, height: 54, textTransform: "uppercase" }} />
-            <button onClick={() => setInsured((v) => !v)} className="flex items-center gap-3 mt-4 w-full text-left"><Box on={insured} /><span style={{ fontWeight: 600, fontSize: 14.5 }}>I carry liability insurance</span></button>
+            <div className="mt-4 flex gap-2.5 rounded-md bg-trust/10 p-3"><Shield size={16} className="mt-0.5 shrink-0 text-trust" /><span className="text-[12.5px] leading-snug text-status-completed">{licensedNames.join(", ")} require a verified license & insurance.</span></div>
+            <div className={cn("mt-4", eyebrow)}>License number</div>
+            <input value={lic} onChange={(e) => setLic(e.target.value)} placeholder="License #" className={inputCls} />
+            <div className={cn("mt-3", eyebrow)}>Issuing state</div>
+            <input value={licState} onChange={(e) => setLicState(e.target.value)} maxLength={2} placeholder="e.g. NY" className={cn(inputCls, "uppercase")} />
+            <button onClick={() => setInsured((v) => !v)} className="mt-4 flex w-full items-center gap-3 text-left"><Box on={insured} /><span className="text-[14.5px] font-semibold">I carry liability insurance</span></button>
           </>) : (
-            <div className="rounded-xl p-3 mt-4" style={{ background: C.sel, color: C.sub, fontSize: 13, lineHeight: 1.45 }}>Your selected trades don't require a license. You'll still be background-checked before going live.</div>
+            <div className="mt-4 rounded-md bg-secondary p-3 text-[13px] leading-relaxed text-muted-foreground">Your selected trades don't require a license. You'll still be background-checked before going live.</div>
           )}
-          <button onClick={() => setBg((v) => !v)} className="flex items-center gap-3 mt-4 w-full text-left"><Box on={bg} /><span style={{ fontWeight: 600, fontSize: 14.5 }}>I consent to a background check</span></button>
+          <button onClick={() => setBg((v) => !v)} className="mt-4 flex w-full items-center gap-3 text-left"><Box on={bg} /><span className="text-[14.5px] font-semibold">I consent to a background check</span></button>
         </>)}
 
         {step === 3 && (<>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>Review & go live</div>
-          <div className="rounded-2xl p-4 mt-4" style={{ border: `1px solid ${C.line}` }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.sub }}>SERVICES</div>
-            <div className="flex flex-wrap gap-1.5 mt-2">{trades.map((id) => <span key={id} className="rounded-full px-2.5 py-1" style={{ background: C.sel, fontSize: 12, fontWeight: 600 }}>{tradeById(id).name}</span>)}</div>
-            <div className="flex justify-between mt-4 pt-3" style={{ borderTop: `1px solid ${C.line}` }}><span style={{ color: C.sub, fontSize: 14 }}>Experience</span><span style={{ fontWeight: 600 }}>{exp || "—"}</span></div>
-            <div className="flex justify-between mt-2"><span style={{ color: C.sub, fontSize: 14 }}>Area</span><span style={{ fontWeight: 600 }}>{area} · {radius} mi</span></div>
-            <div className="flex justify-between mt-2"><span style={{ color: C.sub, fontSize: 14 }}>License</span><span style={{ fontWeight: 600 }}>{needsLicense ? `${lic} (${licState.toUpperCase()})` : "Not required"}</span></div>
-            <div className="flex justify-between mt-2"><span style={{ color: C.sub, fontSize: 14 }}>Background check</span><span style={{ fontWeight: 600, color: C.green }}>Consented</span></div>
+          <h2 className="text-[22px] font-extrabold tracking-tight">Review & go live</h2>
+          <div className="mt-4 rounded-lg border border-border p-4">
+            <div className={eyebrow}>Services</div>
+            <div className="mt-2 flex flex-wrap gap-1.5">{trades.map((id) => <span key={id} className="rounded-full bg-secondary px-2.5 py-1 text-[12px] font-semibold">{tradeById(id).name}</span>)}</div>
+            <div className="mt-4 flex justify-between border-t border-border pt-3"><span className="text-[14px] text-muted-foreground">Experience</span><span className="font-semibold">{exp || "—"}</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-[14px] text-muted-foreground">Area</span><span className="font-semibold">{area} · {radius} mi</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-[14px] text-muted-foreground">License</span><span className="font-semibold">{needsLicense ? `${lic} (${licState.toUpperCase()})` : "Not required"}</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-[14px] text-muted-foreground">Background check</span><span className="flex items-center gap-1 font-semibold text-trust"><Check size={14} /> Consented</span></div>
           </div>
-          <div className="mt-3 px-1" style={{ color: C.sub, fontSize: 12.5, lineHeight: 1.4 }}>Verification usually completes within 24 hours. You can start receiving jobs once approved.</div>
+          <p className="mt-3 px-1 text-[12.5px] leading-relaxed text-muted-foreground">Verification usually completes within 24 hours. You can start receiving jobs once approved.</p>
         </>)}
       </div>
 
-      <div className="px-5 pb-6 pt-3"><button disabled={!canNext} onClick={next} className="w-full rounded-2xl flex items-center justify-center gap-2 active:scale-[.98] transition" style={{ background: canNext ? C.ink : "#C9CACE", color: "#fff", height: 54, fontWeight: 700, fontSize: 16 }}>{step < 3 ? "Continue" : editing ? "Save changes" : "Go live as a pro"} <ArrowRight size={18} /></button></div>
+      <div className="px-5 pb-6 pt-3">
+        {hint && <p className="mb-2 text-center text-[12.5px] font-semibold text-muted-foreground">{hint}</p>}
+        <Button size="lg" disabled={!canNext} onClick={next} className="w-full">
+          {step < 3 ? "Continue" : editing ? "Save changes" : "Go live as a pro"} <ArrowRight size={18} />
+        </Button>
+      </div>
     </div>
   );
 }
 
 /* ---------- CONFIRM COMPLETION (both sides must agree) ---------- */
-function Confirm({ proName, customerName, onBack, onResolve }) {
+function Confirm({ proName, customerName, amount, onBack, onResolve }) {
   const [client, setClient] = useState(null);
   const [proAns, setProAns] = useState(null);
   const [secs, setSecs] = useState(12);
@@ -1114,31 +1223,98 @@ function Confirm({ proName, customerName, onBack, onResolve }) {
   useEffect(() => { if (secs !== 0) return; if (client === null) { setAutoC(true); setClient(true); } if (proAns === null) { setAutoP(true); setProAns(true); } }, [secs]);
   const both = client !== null && proAns !== null;
   const agreed = client === true && proAns === true;
+  const Choice = ({ val, set, kind, children }) => {
+    const on = val === (kind === "yes");
+    return (
+      <button
+        onClick={() => set(kind === "yes")}
+        aria-pressed={on}
+        className={cn(
+          "flex flex-1 items-center justify-center gap-1.5 rounded-md border-[1.5px] py-2.5 text-[14px] font-bold transition active:scale-95",
+          on && kind === "yes" && "border-trust bg-trust/10 text-status-completed",
+          on && kind === "no" && "border-destructive bg-destructive/10 text-destructive",
+          !on && "border-border bg-card text-foreground",
+        )}
+      >
+        {kind === "yes" ? <Check size={15} /> : <X size={15} />}
+        {children}
+      </button>
+    );
+  };
   const Row = ({ label, who, val, set, auto }) => (
-    <div className="rounded-2xl p-4 mt-3" style={{ border: `1px solid ${C.line}` }}>
-      <div className="flex items-center justify-between"><div style={{ fontWeight: 700, fontSize: 14.5 }}>{label}</div>{auto && <span className="rounded-full px-2 py-0.5" style={{ background: "#E8F0FE", color: C.blue, fontSize: 10.5, fontWeight: 700 }}>Auto-confirmed</span>}</div>
-      <div style={{ color: C.sub, fontSize: 12.5, marginTop: 1 }}>{who}</div>
-      <div className="flex gap-2 mt-3">
-        <button onClick={() => set(true)} className="flex-1 rounded-xl py-2.5 active:scale-95 transition" style={{ border: `1.5px solid ${val === true ? C.green : C.line}`, background: val === true ? "#E7F6EE" : "#fff", color: val === true ? "#0B7A4D" : C.ink, fontWeight: 700, fontSize: 14 }}>Completed</button>
-        <button onClick={() => set(false)} className="flex-1 rounded-xl py-2.5 active:scale-95 transition" style={{ border: `1.5px solid ${val === false ? C.red : C.line}`, background: val === false ? "#FDECEC" : "#fff", color: val === false ? "#B42318" : C.ink, fontWeight: 700, fontSize: 14 }}>Not completed</button>
+    <div className="mt-3 rounded-lg border border-border bg-card p-4">
+      <div className="flex items-center justify-between">
+        <div className="text-[14.5px] font-bold">{label}</div>
+        {auto && <span className="rounded-full bg-accent px-2 py-0.5 text-[10.5px] font-bold text-accent-foreground">Auto-confirmed</span>}
+        {!auto && val !== null && <span className={cn("text-[10.5px] font-bold uppercase tracking-wide", val ? "text-status-completed" : "text-destructive")}>{val ? "Completed" : "Not completed"}</span>}
+      </div>
+      <div className="mt-0.5 text-[12.5px] font-medium text-muted-foreground">{who}</div>
+      <div className="mt-3 flex gap-2">
+        <Choice val={val} set={set} kind="yes">Completed</Choice>
+        <Choice val={val} set={set} kind="no">Not completed</Choice>
       </div>
     </div>
   );
   return (
-    <div className="h-full flex flex-col" style={{ background: C.sheet }}>
+    <div className="flex h-full flex-col bg-card">
       <Header title="Confirm completion" onBack={onBack} />
       <div className="flex-1 overflow-auto px-5">
-        <div style={{ color: C.sub, fontSize: 13.5, lineHeight: 1.45 }} className="mt-1">Both sides confirm before payment is released — if you disagree it goes to review, so neither side can lie. If one side doesn't respond within 24 hours, the job auto-confirms as complete so the pro still gets paid.</div>
+        <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">
+          Both sides confirm before payment is released — if you disagree it goes to review, so neither side can lie. If one side doesn't respond within 24 hours, the job auto-confirms as complete so the pro still gets paid.
+        </p>
+
+        {/* Funds-held trust strip */}
+        <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-secondary p-3.5">
+          <Lock size={17} className="shrink-0 text-foreground" />
+          <span className="text-[12.5px] font-medium leading-snug text-muted-foreground">
+            {amount != null ? <><Money amount={amount} size="sm" /> is </> : "Payment is "}
+            held securely in escrow — released the moment you both confirm.
+          </span>
+        </div>
+
         {secs > 0 ? (
-          <div className="rounded-2xl p-3 mt-3 flex items-center gap-2.5" style={{ background: "#E8F0FE" }}><Clock size={16} color={C.blue} /><span style={{ fontSize: 12.5, color: "#174EA6", fontWeight: 600 }}>Auto-confirms in 24h if no response · demo: {secs}s</span></div>
+          <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-status-requested/10 p-3">
+            <Clock size={16} className="text-status-requested" />
+            <span className="tnum text-[12.5px] font-semibold text-status-requested">Auto-confirms in 24h if no response · demo: {secs}s</span>
+          </div>
         ) : (autoC || autoP) ? (
-          <div className="rounded-2xl p-3 mt-3 flex items-center gap-2.5" style={{ background: "#E8F0FE" }}><Check size={16} color={C.blue} /><span style={{ fontSize: 12.5, color: "#174EA6", fontWeight: 600 }}>Window elapsed — unanswered side auto-confirmed as complete.</span></div>
+          <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-status-requested/10 p-3">
+            <Check size={16} className="text-status-requested" />
+            <span className="text-[12.5px] font-semibold text-status-requested">Window elapsed — unanswered side auto-confirmed as complete.</span>
+          </div>
         ) : null}
+
         <Row label="Customer's confirmation" who={customerName || "Customer"} val={client} set={setClient} auto={autoC} />
         <Row label="Pro's confirmation" who={proName || "Pro"} val={proAns} set={setProAns} auto={autoP} />
-        {both && <div className="rounded-2xl p-3 mt-4 flex gap-2.5" style={{ background: agreed ? "#E7F6EE" : "#FDECEC" }}>{agreed ? <Check size={18} color={C.green} style={{ flexShrink: 0, marginTop: 1 }} /> : <AlertTriangle size={18} color={C.red} style={{ flexShrink: 0, marginTop: 1 }} />}<span style={{ fontSize: 12.5, fontWeight: 600, color: agreed ? "#0B7A4D" : "#B42318", lineHeight: 1.4 }}>{agreed ? "Both confirmed — payment will be released." : "Disagreement — sent to Aquilla for review and payment is held."}</span></div>}
+
+        {both && (
+          <div className={cn("mt-4 flex gap-2.5 rounded-lg p-3.5", agreed ? "bg-trust/10" : "bg-destructive/10")}>
+            {agreed ? <Check size={18} className="mt-0.5 shrink-0 text-status-completed" /> : <AlertTriangle size={18} className="mt-0.5 shrink-0 text-destructive" />}
+            <div>
+              <div className={cn("text-[13.5px] font-bold", agreed ? "text-status-completed" : "text-destructive")}>
+                {agreed ? "Both confirmed — releasing payment" : "Disagreement — funds stay held"}
+              </div>
+              <div className={cn("mt-0.5 text-[12.5px] leading-snug", agreed ? "text-status-completed/90" : "text-destructive/90")}>
+                {agreed
+                  ? "The pro is paid out instantly, minus Aquilla's fee."
+                  : "Sent to Aquilla for review. Nobody is paid until it's resolved."}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      <div className="px-5 pb-6 pt-3"><button disabled={!both} onClick={() => onResolve(agreed)} className="w-full rounded-2xl active:scale-[.98] transition" style={{ background: !both ? "#C9CACE" : agreed ? C.green : C.red, color: "#fff", height: 54, fontWeight: 700, fontSize: 16 }}>{!both ? "Waiting on both sides…" : agreed ? "Release payment" : "Send to review"}</button></div>
+      <div className="px-5 pb-6 pt-3">
+        <button
+          disabled={!both}
+          onClick={() => onResolve(agreed)}
+          className={cn(
+            "h-[54px] w-full rounded-md text-[16px] font-bold text-white transition active:scale-[.98] disabled:opacity-100",
+            !both ? "bg-muted-foreground/40" : agreed ? "bg-trust" : "bg-destructive",
+          )}
+        >
+          {!both ? "Waiting on both sides…" : agreed ? "Release payment" : "Send to review"}
+        </button>
+      </div>
     </div>
   );
 }

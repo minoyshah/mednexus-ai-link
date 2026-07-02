@@ -2,127 +2,165 @@
 @tailwind components;
 @tailwind utilities;
 
-/* MedNet Design System - Clinical Precision meets Premium Tech */
+/* =============================================================================
+   Aquilla Design System — "Trust, in motion."
+   Single source of truth for color, elevation, radius, and motion.
+
+   Principles:
+   * Cobalt = dispatch & motion (CTAs, route, "you", focus). Emerald = trust
+     ONLY (verified, paid, arrived) so money/safety signals are never diluted.
+   * Every job lifecycle state has exactly one semantic color, used everywhere
+     a status appears (pins, pills, rows, toasts) — mirrors public.job_status.
+   * Calm dimmed surfaces; people and money pop. Money is always tabular.
+   ========================================================================== */
 
 @layer base {
   :root {
-    /* Core Palette - Navy/Slate with Teal Accents */
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    /* ---- Surfaces & ink -------------------------------------------------- */
+    --background: 220 23% 97%;          /* canvas  #F7F8FA */
+    --foreground: 218 46% 10%;          /* ink     #0E1726 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 218 46% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 218 46% 10%;
 
-    /* Primary - Deep Navy */
-    --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
+    /* ---- Brand — electric cobalt ----------------------------------------- */
+    --primary: 227 100% 59%;            /* #2E5BFF */
+    --primary-foreground: 0 0% 100%;
+    --primary-press: 227 76% 50%;       /* #1E47E0 pressed/active */
 
-    /* Secondary - Soft Slate */
-    --secondary: 215 20% 95%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 220 19% 94%;           /* soft chip/sel surface */
+    --secondary-foreground: 218 46% 10%;
 
-    /* Muted - Subtle backgrounds */
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 220 21% 96%;
+    --muted-foreground: 220 9% 46%;     /* sub #6B7280 */
 
-    /* Accent - Medical Teal */
-    --accent: 173 58% 39%;
-    --accent-foreground: 0 0% 100%;
+    /* tinted hover/selection wash, readable brand text on it */
+    --accent: 227 100% 96%;
+    --accent-foreground: 227 76% 45%;
 
-    /* Trust - Verification Green */
-    --trust: 158 64% 42%;
+    --destructive: 344 89% 60%;         /* rose #F43F6E — disputed/danger */
+    --destructive-foreground: 0 0% 100%;
+
+    /* ---- Trust & rating --------------------------------------------------- */
+    --trust: 160 84% 39%;               /* emerald #10B981 — verified/paid */
     --trust-foreground: 0 0% 100%;
+    --premium: 42 100% 50%;             /* rating gold #FFB400 */
+    --premium-foreground: 218 46% 10%;
 
-    /* Premium - Subtle Gold */
-    --premium: 38 92% 50%;
-    --premium-foreground: 222 47% 11%;
+    --border: 220 19% 91%;
+    --input: 220 19% 91%;
+    --ring: 227 100% 59%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --radius: 1.25rem;                  /* 20px cards; pills are 999 */
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 173 58% 39%;
+    /* ---- Job lifecycle (mirrors public.job_status) ------------------------ */
+    --status-requested: 227 100% 59%;   /* cobalt, pulsing while searching   */
+    --status-accepted: 252 96% 67%;     /* violet  #7C5CFC matched           */
+    --status-en-route: 38 92% 50%;      /* amber   #F59E0B in motion         */
+    --status-arrived: 160 84% 39%;      /* emerald #10B981                   */
+    --status-awaiting-part: 215 16% 47%;/* slate   #64748B paused, neutral   */
+    --status-completed: 161 94% 30%;    /* deep emerald #059669 paid         */
+    --status-visit-fee: 26 90% 44%;     /* deep amber #D97706 partial        */
+    --status-disputed: 344 89% 60%;     /* rose    #F43F6E funds held        */
+    --status-cancelled: 217 10% 64%;    /* neutral #9AA1AC                   */
 
-    --radius: 0.75rem;
+    /* ---- Map canvas (dimmed so route/pins/people pop) --------------------- */
+    --map-land: 216 20% 93%;            /* #EAEDF1 */
+    --map-road: 0 0% 100%;
+    --map-casing: 218 18% 88%;          /* #DBE0E7 */
+    --map-water: 204 71% 89%;           /* #CFE6F7 */
+    --map-park: 105 33% 88%;            /* #DCEBD8 */
+    --map-building: 220 14% 87%;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(222, 47%, 11%) 0%, hsl(215, 28%, 17%) 50%, hsl(222, 47%, 11%) 100%);
-    --gradient-trust: linear-gradient(135deg, hsl(173, 58%, 39%) 0%, hsl(158, 64%, 42%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 20%, 98%) 100%);
-    --gradient-glow: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(173, 58%, 39%, 0.15) 0%, transparent 70%);
+    /* ---- Elevation (tuned for a light map underneath) --------------------- */
+    --shadow-card: 0 1px 2px hsl(218 46% 10% / 0.04),
+                   0 8px 24px -12px hsl(218 46% 10% / 0.14);
+    --shadow-sheet: 0 -1px 0 hsl(218 46% 10% / 0.04),
+                    0 -24px 48px -24px hsl(218 46% 10% / 0.22);
+    --shadow-pin: 0 4px 14px -2px hsl(227 100% 59% / 0.55);
+    --shadow-float: 0 2px 6px hsl(218 46% 10% / 0.08),
+                    0 12px 32px -8px hsl(218 46% 10% / 0.18);
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(222, 47%, 11%, 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(222, 47%, 11%, 0.08), 0 2px 4px -2px hsl(222, 47%, 11%, 0.04);
-    --shadow-lg: 0 10px 15px -3px hsl(222, 47%, 11%, 0.08), 0 4px 6px -4px hsl(222, 47%, 11%, 0.04);
-    --shadow-xl: 0 20px 25px -5px hsl(222, 47%, 11%, 0.08), 0 8px 10px -6px hsl(222, 47%, 11%, 0.04);
-    --shadow-glow: 0 0 40px -10px hsl(173, 58%, 39%, 0.4);
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 173 58% 39%;
+    /* ---- Motion — one spring, used everywhere ------------------------------ */
+    --ease-spring: cubic-bezier(0.22, 0.7, 0.25, 1);
+    --dur-fast: 180ms;
+    --dur-base: 260ms;
+    --dur-slow: 340ms;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 222 35% 7%;
+    --foreground: 220 23% 96%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 222 30% 10%;
+    --card-foreground: 220 23% 96%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 30% 10%;
+    --popover-foreground: 220 23% 96%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 227 100% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-press: 227 86% 58%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 221 26% 16%;
+    --secondary-foreground: 220 23% 96%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 221 26% 14%;
+    --muted-foreground: 220 12% 64%;
 
-    --accent: 173 58% 45%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 227 60% 18%;
+    --accent-foreground: 227 100% 78%;
 
-    --trust: 158 64% 48%;
-    --trust-foreground: 222 47% 11%;
+    --destructive: 344 89% 64%;
+    --destructive-foreground: 0 0% 100%;
 
-    --premium: 38 92% 55%;
-    --premium-foreground: 222 47% 11%;
+    --trust: 160 76% 45%;
+    --trust-foreground: 222 35% 7%;
+    --premium: 42 100% 55%;
+    --premium-foreground: 222 35% 7%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --border: 221 26% 17%;
+    --input: 221 26% 17%;
+    --ring: 227 100% 65%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 173 58% 45%;
+    --status-requested: 227 100% 65%;
+    --status-accepted: 252 96% 72%;
+    --status-en-route: 38 92% 55%;
+    --status-arrived: 160 76% 45%;
+    --status-awaiting-part: 215 16% 57%;
+    --status-completed: 161 84% 40%;
+    --status-visit-fee: 26 90% 52%;
+    --status-disputed: 344 89% 64%;
+    --status-cancelled: 217 10% 50%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(222, 47%, 6%) 0%, hsl(215, 28%, 12%) 50%, hsl(222, 47%, 6%) 100%);
+    --map-land: 222 26% 12%;
+    --map-road: 222 20% 18%;
+    --map-casing: 222 22% 22%;
+    --map-water: 212 45% 16%;
+    --map-park: 150 20% 13%;
+    --map-building: 222 20% 16%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 173 58% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 173 58% 45%;
+    --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.3),
+                   0 8px 24px -12px hsl(0 0% 0% / 0.5);
+    --shadow-sheet: 0 -1px 0 hsl(0 0% 0% / 0.3),
+                    0 -24px 48px -24px hsl(0 0% 0% / 0.6);
+    --shadow-pin: 0 4px 14px -2px hsl(227 100% 65% / 0.45);
+    --shadow-float: 0 2px 6px hsl(0 0% 0% / 0.35),
+                    0 12px 32px -8px hsl(0 0% 0% / 0.5);
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   }
 
   body {
@@ -131,107 +169,59 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
-  }
-}
-
-@layer components {
-  .hero-gradient {
-    background: var(--gradient-hero);
+    @apply font-bold tracking-tight;
+    letter-spacing: -0.02em;
   }
 
-  .trust-gradient {
-    background: var(--gradient-trust);
+  /* Money and timers never jiggle. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
   }
 
-  .card-gradient {
-    background: var(--gradient-card);
-  }
-
-  .glow-overlay {
-    background: var(--gradient-glow);
-  }
-
-  .shadow-glow {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .text-gradient-accent {
-    background: var(--gradient-trust);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  /* Visible focus for keyboard users; pointer users keep a clean surface. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 6px;
   }
 }
 
 @layer utilities {
-  .animate-fade-up {
-    animation: fadeUp 0.6s ease-out forwards;
-  }
+  .shadow-card  { box-shadow: var(--shadow-card); }
+  .shadow-sheet { box-shadow: var(--shadow-sheet); }
+  .shadow-pin   { box-shadow: var(--shadow-pin); }
+  .shadow-float { box-shadow: var(--shadow-float); }
 
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.4s ease-out forwards;
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-pulse-soft {
-    animation: pulseSoft 3s ease-in-out infinite;
-  }
+  .animate-fade-up   { animation: fadeUp var(--dur-base) var(--ease-spring) both; }
+  .animate-fade-in   { animation: fadeIn var(--dur-base) ease-out both; }
+  .animate-scale-in  { animation: scaleIn var(--dur-fast) var(--ease-spring) both; }
+  .animate-sheet-up  { animation: sheetUp var(--dur-slow) var(--ease-spring) both; }
+  .animate-row-in    { animation: rowIn var(--dur-base) var(--ease-spring) both; }
+  .animate-ping-soft { animation: pingSoft 2s ease-out infinite; }
 
   @keyframes fadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
-
   @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
   }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
+  @keyframes sheetUp {
+    from { transform: translateY(40px); opacity: 0.4; }
+    to   { transform: translateY(0); opacity: 1; }
   }
-
-  @keyframes pulseSoft {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.7;
-    }
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pingSoft {
+    0%   { transform: scale(0.5); opacity: 0.5; }
+    100% { transform: scale(2.4); opacity: 0; }
   }
 
   .delay-100 { animation-delay: 100ms; }
@@ -239,4 +229,11 @@
   .delay-300 { animation-delay: 300ms; }
   .delay-400 { animation-delay: 400ms; }
   .delay-500 { animation-delay: 500ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-up, .animate-fade-in, .animate-scale-in,
+    .animate-sheet-up, .animate-row-in, .animate-ping-soft {
+      animation: none;
+    }
+  }
 }

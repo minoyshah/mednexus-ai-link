@@ -12,9 +12,18 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify:schema": "set -a; . ./.env.local; set +a; psql \"$SUPABASE_DB_URL\" -v ON_ERROR_STOP=1 -f scripts/aquilla-verify/verify_schema.sql",
-    "verify:stripe": "npm --prefix scripts/aquilla-verify install && npm --prefix scripts/aquilla-verify run stripe"
+    "verify:stripe": "npm --prefix scripts/aquilla-verify install && npm --prefix scripts/aquilla-verify run stripe",
+    "cap:add:ios": "npm run build && npx cap add ios && npx cap sync ios",
+    "cap:add:android": "npm run build && npx cap add android && npx cap sync android",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -52,6 +61,7 @@
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
+    "maplibre-gl": "^4.7.1",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -67,6 +77,9 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/ios": "^8.4.1",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",

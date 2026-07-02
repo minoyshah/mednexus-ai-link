@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          press: "hsl(var(--primary-press))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -55,24 +56,46 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        /* Job lifecycle — mirrors public.job_status (see index.css). */
+        status: {
+          requested: "hsl(var(--status-requested))",
+          accepted: "hsl(var(--status-accepted))",
+          "en-route": "hsl(var(--status-en-route))",
+          arrived: "hsl(var(--status-arrived))",
+          "awaiting-part": "hsl(var(--status-awaiting-part))",
+          completed: "hsl(var(--status-completed))",
+          "visit-fee": "hsl(var(--status-visit-fee))",
+          disputed: "hsl(var(--status-disputed))",
+          cancelled: "hsl(var(--status-cancelled))",
+        },
+        map: {
+          land: "hsl(var(--map-land))",
+          road: "hsl(var(--map-road))",
+          casing: "hsl(var(--map-casing))",
+          water: "hsl(var(--map-water))",
+          park: "hsl(var(--map-park))",
+          building: "hsl(var(--map-building))",
+        },
+        /* sidebar.tsx (unused shell) rides the core tokens — no extra vars. */
         sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+          DEFAULT: "hsl(var(--background))",
+          foreground: "hsl(var(--foreground))",
+          primary: "hsl(var(--primary))",
+          "primary-foreground": "hsl(var(--primary-foreground))",
+          accent: "hsl(var(--accent))",
+          "accent-foreground": "hsl(var(--accent-foreground))",
+          border: "hsl(var(--border))",
+          ring: "hsl(var(--ring))",
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        xl: "calc(var(--radius) + 6px)", /* 26px — sheet tops */
+        lg: "var(--radius)",             /* 20px — cards */
+        md: "calc(var(--radius) - 4px)", /* 16px — buttons, inputs */
+        sm: "calc(var(--radius) - 8px)", /* 12px — chips, small controls */
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ["Plus Jakarta Sans", "system-ui", "-apple-system", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
