@@ -1032,7 +1032,7 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
 
                 {jobsView === "map" ? (
                   <div className="rounded-2xl overflow-hidden" style={{ height: 460, border: `1px solid ${C.line}` }}>
-                    <MapExperience pins={reqPins} title="Jobs near you" selectLabel="Accept" onSelect={(p) => acceptById(p.id)} />
+                    <MapExperience pins={reqPins} title="Jobs near you" selectLabel="Accept" statusLabel="Open" onSelect={(p) => acceptById(p.id)} />
                   </div>
                 ) : myReqs.length === 0 ? (
                   <div className="text-center py-12" style={{ color: C.sub, fontSize: 14 }}>No requests for your trades right now.</div>
@@ -1041,7 +1041,7 @@ function ProApp({ profile, setup, onEditSetup, onSaveProfile, onExit }) {
                     <div className="flex items-center gap-3">
                       <div className="rounded-md flex items-center justify-center shrink-0" style={{ background: C.sel, width: 46, height: 46 }}><Icon size={21} color={C.ink} /></div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2"><span style={{ fontWeight: 800, fontSize: 15.5, letterSpacing: -0.2 }}>{tradeById(req.tradeId).name}</span><StatusPill status="requested" appearance="tint" className="px-2 py-0.5" /></div>
+                        <div className="flex items-center gap-2"><span style={{ fontWeight: 800, fontSize: 15.5, letterSpacing: -0.2 }}>{tradeById(req.tradeId).name}</span><StatusPill status="requested" label="New request" appearance="tint" className="px-2 py-0.5" /></div>
                         <div className="truncate" style={{ color: C.sub, fontSize: 12.5, marginTop: 2 }}>{req.problem} · {req.customer} · {req.dist} mi away</div>
                       </div>
                       <div className="text-right shrink-0">

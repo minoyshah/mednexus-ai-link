@@ -8,6 +8,11 @@ interface StatusPillProps {
   appearance?: "solid" | "tint";
   /** Pulse the dot while actively searching/moving. */
   live?: boolean;
+  /**
+   * Context-specific label override (same status color). E.g. the customer
+   * sees "Finding your pro" while the pro's request card reads "New request".
+   */
+  label?: string;
   className?: string;
 }
 
@@ -15,7 +20,7 @@ interface StatusPillProps {
  * The status chip used everywhere a job state appears. One source of color
  * (status.ts) so a pill, a map pin and a list row can never disagree.
  */
-export function StatusPill({ status, appearance = "solid", live, className }: StatusPillProps) {
+export function StatusPill({ status, appearance = "solid", live, label, className }: StatusPillProps) {
   const s = toJobStatus(String(status));
   const meta = STATUS_META[s];
   const isLive = live ?? (s === "requested" || s === "en_route");
@@ -23,7 +28,7 @@ export function StatusPill({ status, appearance = "solid", live, className }: St
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide",
         appearance === "solid"
           ? cn(meta.bg, "text-white")
           : cn(meta.tint, meta.text),
@@ -38,7 +43,7 @@ export function StatusPill({ status, appearance = "solid", live, className }: St
           isLive && "motion-safe:animate-pulse",
         )}
       />
-      {meta.label}
+      {label ?? meta.label}
     </span>
   );
 }

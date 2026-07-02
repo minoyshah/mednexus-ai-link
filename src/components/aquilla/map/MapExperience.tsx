@@ -19,6 +19,8 @@ interface MapExperienceProps {
   title?: string;
   /** Label for the focused card's commit button (e.g. "Accept"). */
   selectLabel?: string;
+  /** Short status label for row pills (e.g. "Open" on the pro's job map). */
+  statusLabel?: string;
   /** Fired when the user commits to a focused pin (e.g. "Choose"). */
   onSelect?: (pin: MapPin) => void;
   className?: string;
@@ -35,6 +37,7 @@ export function MapExperience({
   you = MOCK_YOU,
   title = "Pros near you",
   selectLabel = "Choose",
+  statusLabel,
   onSelect,
   className,
 }: MapExperienceProps) {
@@ -107,7 +110,7 @@ export function MapExperience({
                     trailing={
                       <div className="flex flex-col items-end gap-1">
                         {typeof p.price === "number" && <Money amount={p.price} size="sm" />}
-                        <StatusPill status={p.status} appearance="tint" className="px-2 py-0.5" />
+                        <StatusPill status={p.status} label={statusLabel} appearance="tint" className="px-2 py-0.5" />
                       </div>
                     }
                   />
