@@ -30,7 +30,9 @@ Stripe — none of which can be exercised from a sandboxed environment).
 ## 1. Deploy the backend (Supabase)
 
 ```bash
-npm i -g supabase            # or: npm i -D supabase && npx supabase …
+# Supabase CLI (global npm install is not supported by the package):
+#   macOS:  brew install supabase/tap/supabase
+#   any OS: npm i -D supabase   and prefix every command below with `npx `
 supabase login               # browser auth
 supabase link --project-ref esdrhofpukpxgjslnmfn
 supabase db push             # applies the 3 migrations
